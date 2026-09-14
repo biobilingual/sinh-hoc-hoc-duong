@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Sinh học học đường — thư viện kiến thức và từ điển sinh học dành cho học sinh.">
+  <title>Sinh học học đường</title>
+  <style>
+    :root{--ink:#102a43;--muted:#5d7184;--green:#0b6e4f;--mint:#dff7ed;--aqua:#e9f8ff;--yellow:#fff0b5;--white:#fff;--line:#dce8e4;--shadow:0 18px 50px rgba(16,42,67,.10)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:#f7fbfa;line-height:1.6}
+    button,input{font:inherit}button{cursor:pointer}.shell{width:min(1160px,calc(100% - 32px));margin:auto}
+    header{position:sticky;top:0;z-index:20;background:rgba(247,251,250,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(220,232,228,.8)}
+    .nav{height:72px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:10px;font-weight:850}.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--green);color:white;font-size:21px}
+    nav{display:flex;gap:8px}.nav-btn{border:0;background:transparent;color:var(--muted);font-weight:700;padding:10px 14px;border-radius:10px}.nav-btn:hover,.nav-btn.active{background:var(--mint);color:var(--green)}
+    .hero{padding:56px 0 32px}.hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:30px;align-items:center}.eyebrow{display:inline-flex;gap:8px;align-items:center;background:var(--mint);color:var(--green);padding:6px 12px;border-radius:999px;font-size:14px;font-weight:800}
+    h1{font-size:clamp(40px,7vw,74px);line-height:1.02;letter-spacing:-.055em;margin:18px 0 20px;max-width:760px}h1 span{color:var(--green)}.lead{font-size:19px;color:var(--muted);max-width:650px;margin:0 0 28px}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}.primary,.secondary{border-radius:13px;padding:12px 18px;font-weight:800;border:1px solid var(--green)}.primary{background:var(--green);color:white}.secondary{background:white;color:var(--green)}
+    .cell-card{min-height:330px;border-radius:34px;background:linear-gradient(145deg,#0b6e4f,#15a272);position:relative;overflow:hidden;box-shadow:var(--shadow);display:grid;place-items:center}.cell{width:210px;height:210px;border-radius:50%;background:rgba(255,255,255,.22);border:3px solid rgba(255,255,255,.72);position:relative;display:grid;place-items:center}.nucleus{width:82px;height:82px;background:#ffd166;border-radius:50%;box-shadow:inset -10px -8px 0 rgba(192,105,20,.18)}.organelle{position:absolute;width:32px;height:16px;border-radius:50%;background:#ff8fab;transform:rotate(-25deg)}.o1{top:38px;left:42px}.o2{bottom:42px;right:34px;background:#8bd3dd}.o3{right:25px;top:60px;background:#cdb4db}.bubble{position:absolute;background:white;border-radius:14px;padding:8px 12px;font-size:13px;font-weight:800;box-shadow:var(--shadow)}.b1{left:18px;top:22px}.b2{right:16px;bottom:25px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:26px 0 50px}.stat{background:white;border:1px solid var(--line);border-radius:18px;padding:17px 20px}.stat strong{display:block;font-size:25px;color:var(--green)}.stat span{color:var(--muted);font-size:14px}
+    section{padding:38px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:22px}.section-head h2{font-size:32px;letter-spacing:-.035em;margin:0}.section-head p{margin:4px 0 0;color:var(--muted)}
+    .topics{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}.topic{background:white;border:1px solid var(--line);border-radius:22px;padding:22px;text-align:left;transition:.2s;min-height:205px}.topic:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:#a7d9ca}.topic-icon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:27px;background:var(--mint)}.topic:nth-child(2n) .topic-icon{background:var(--aqua)}.topic:nth-child(3n) .topic-icon{background:var(--yellow)}.topic h3{margin:16px 0 6px;font-size:20px}.topic p{margin:0;color:var(--muted);font-size:15px}.tag{display:inline-block;margin-top:14px;color:var(--green);font-weight:800;font-size:13px}
+    .glossary-wrap{background:#102a43;color:white;border-radius:30px;padding:28px}.glossary-head{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:end}.glossary-head h2{margin:0;font-size:32px}.glossary-head p{color:#c8d6e2;margin:5px 0 0}.search{width:100%;padding:14px 16px;border:0;border-radius:13px;outline:none}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.chip{border:1px solid #526a7e;background:transparent;color:#dfe8ef;border-radius:999px;padding:7px 12px}.chip.active,.chip:hover{background:#dff7ed;color:#0b6e4f;border-color:#dff7ed}
+    .words{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.word{background:white;color:var(--ink);border-radius:15px;padding:15px;border:0;text-align:left}.word strong{display:block;color:var(--green);font-size:17px}.word span{font-size:13px;color:var(--muted)}.empty{grid-column:1/-1;color:#c8d6e2;text-align:center;padding:25px}
+    footer{padding:45px 0;color:var(--muted);text-align:center;font-size:14px}.modal{position:fixed;inset:0;background:rgba(4,22,33,.58);display:none;place-items:center;padding:20px;z-index:50}.modal.open{display:grid}.dialog{background:white;border-radius:24px;padding:26px;width:min(560px,100%);box-shadow:var(--shadow)}.dialog-top{display:flex;justify-content:space-between;gap:16px}.dialog h3{font-size:27px;margin:0;color:var(--green)}.close{border:0;background:#edf4f2;width:38px;height:38px;border-radius:50%;font-size:22px}.definition{font-size:17px}.example{background:var(--mint);padding:14px;border-radius:13px}.hidden{display:none!important}
+    @media(max-width:820px){.hero-grid,.glossary-head{grid-template-columns:1fr}.cell-card{min-height:280px}.topics,.words{grid-template-columns:repeat(2,1fr)}nav{display:none}.hero{padding-top:36px}}
+    @media(max-width:540px){.shell{width:min(100% - 22px,1160px)}h1{font-size:44px}.stats{grid-template-columns:1fr}.topics,.words{grid-template-columns:1fr}.section-head{align-items:start;flex-direction:column}.glossary-wrap{padding:20px;border-radius:22px}}
+  </style>
+</head>
+<body>
+<header><div class="shell nav"><div class="brand"><span class="brand-mark">🧬</span><span>Sinh học học đường</span></div><nav><button class="nav-btn active" data-go="home">Khám phá</button><button class="nav-btn" data-go="library">Thư viện</button><button class="nav-btn" data-go="glossary">Từ vựng</button></nav></div></header>
+<main id="home">
+  <div class="shell hero"><div class="hero-grid">
+    <div><span class="eyebrow">🌱 Học từ sự sống quanh ta</span><h1>Hiểu sinh học theo cách <span>dễ nhớ.</span></h1><p class="lead">Khám phá kiến thức bằng những bài học ngắn, ví dụ gần gũi và từ điển thuật ngữ được viết riêng cho học sinh.</p><div class="actions"><button class="primary" data-go="library">Vào thư viện</button><button class="secondary" data-go="glossary">Tra từ vựng</button></div></div>
+    <div class="cell-card" aria-label="Mô hình minh họa tế bào"><span class="bubble b1">Màng tế bào</span><div class="cell"><div class="nucleus"></div><i class="organelle o1"></i><i class="organelle o2"></i><i class="organelle o3"></i></div><span class="bubble b2">Nhân tế bào</span></div>
+  </div><div class="stats"><div class="stat"><strong>6</strong><span>chủ đề cốt lõi</span></div><div class="stat"><strong>18</strong><span>thuật ngữ dễ hiểu</span></div><div class="stat"><strong>100%</strong><span>miễn phí cho học sinh</span></div></div></div>
+  <section id="library"><div class="shell"><div class="section-head"><div><h2>Thư viện kiến thức</h2><p>Chọn một chủ đề để xem nội dung tóm tắt.</p></div></div><div class="topics" id="topics"></div></div></section>
+  <section id="glossary"><div class="shell glossary-wrap"><div class="glossary-head"><div><h2>Từ điển sinh học</h2><p>Gõ tên hoặc ý nghĩa bạn muốn tìm.</p></div><input id="search" class="search" type="search" placeholder="Ví dụ: ADN, tế bào, quang hợp…" aria-label="Tìm kiếm từ vựng"></div><div class="chips" id="chips"></div><div class="words" id="words"></div></div></section>
+</main>
+<footer><div class="shell">Sinh học học đường · Kiến thức ngắn gọn, tò mò dài lâu 🌿</div></footer>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><article class="dialog"><div class="dialog-top"><h3 id="modal-title"></h3><button class="close" aria-label="Đóng">×</button></div><p class="definition" id="modal-definition"></p><p class="example" id="modal-example"></p></article></div>
+<script>
+const topics=[
+ {icon:"🔬",title:"Tế bào học",desc:"Cấu tạo, chức năng và cách tế bào duy trì sự sống.",detail:"Tế bào là đơn vị cấu tạo và chức năng cơ bản của cơ thể sống. Màng tế bào kiểm soát chất ra vào; tế bào chất chứa các bào quan; nhân lưu giữ phần lớn thông tin di truyền."},
+ {icon:"🧬",title:"Di truyền học",desc:"ADN, gen và cách đặc điểm được truyền qua thế hệ.",detail:"Gen là một đoạn ADN mang thông tin tạo nên sản phẩm sinh học. Nhiễm sắc thể chứa nhiều gen. Con nhận vật chất di truyền từ cả bố và mẹ, tạo nên sự giống và khác nhau."},
+ {icon:"🌿",title:"Thực vật học",desc:"Quang hợp, vận chuyển chất và sự sinh trưởng.",detail:"Thực vật dùng ánh sáng, nước và khí carbon dioxide để tạo chất hữu cơ qua quang hợp. Rễ hấp thụ nước; mạch gỗ và mạch rây giúp vận chuyển chất trong cây."},
+ {icon:"🫀",title:"Cơ thể người",desc:"Các hệ cơ quan phối hợp để giữ cơ thể khỏe mạnh.",detail:"Cơ thể người gồm nhiều hệ cơ quan. Hệ tuần hoàn vận chuyển chất, hệ hô hấp trao đổi khí, hệ tiêu hóa biến đổi thức ăn và hệ thần kinh điều khiển hoạt động."},
+ {icon:"🌏",title:"Sinh thái học",desc:"Mối quan hệ giữa sinh vật và môi trường sống.",detail:"Hệ sinh thái gồm quần xã sinh vật và môi trường vô sinh. Năng lượng đi qua chuỗi thức ăn, còn vật chất được tuần hoàn giữa sinh vật và môi trường."},
+ {icon:"🦋",title:"Tiến hóa",desc:"Sự đa dạng và thích nghi của sinh giới qua thời gian.",detail:"Tiến hóa là sự thay đổi đặc điểm di truyền của quần thể qua nhiều thế hệ. Chọn lọc tự nhiên làm các đặc điểm có lợi trở nên phổ biến hơn trong môi trường nhất định."}
+];
+const words=[
+ ["ADN","Di truyền","Phân tử lưu giữ thông tin di truyền của sinh vật.","ADN giống như một cuốn hướng dẫn để tế bào hoạt động."],
+ ["Bào quan","Tế bào","Cấu trúc chuyên biệt nằm trong tế bào.","Ti thể là một bào quan tham gia giải phóng năng lượng."],
+ ["Enzyme","Cơ thể","Chất xúc tác sinh học giúp phản ứng diễn ra nhanh hơn.","Enzyme trong nước bọt bắt đầu phân giải tinh bột."],
+ ["Gen","Di truyền","Một đoạn ADN mang thông tin cho một sản phẩm sinh học.","Một số gen góp phần quy định màu mắt."],
+ ["Hệ sinh thái","Sinh thái","Sinh vật và môi trường của chúng trong một khu vực.","Ao là một hệ sinh thái nhỏ."],
+ ["Lục lạp","Thực vật","Bào quan chứa diệp lục, nơi diễn ra quang hợp.","Tế bào lá có nhiều lục lạp."],
+ ["Màng tế bào","Tế bào","Lớp bao quanh, kiểm soát chất đi vào và ra khỏi tế bào.","Màng tế bào có tính thấm chọn lọc."],
+ ["Nhiễm sắc thể","Di truyền","Cấu trúc chứa ADN và nhiều gen.","Người thường có 46 nhiễm sắc thể trong tế bào cơ thể."],
+ ["Quang hợp","Thực vật","Quá trình tạo chất hữu cơ nhờ năng lượng ánh sáng.","Cây xanh quang hợp và giải phóng oxygen."],
+ ["Quần thể","Sinh thái","Nhóm cá thể cùng loài sống trong một khu vực.","Đàn cá chép trong hồ tạo thành một quần thể."],
+ ["Quần xã","Sinh thái","Tập hợp nhiều quần thể khác loài cùng sống.","Rừng mưa có quần xã rất đa dạng."],
+ ["Tế bào","Tế bào","Đơn vị cấu tạo và chức năng cơ bản của sự sống.","Cơ thể người được tạo nên từ hàng nghìn tỉ tế bào."],
+ ["Ti thể","Tế bào","Bào quan tham gia hô hấp tế bào và cung cấp năng lượng.","Tế bào cơ thường có nhiều ti thể."],
+ ["Trao đổi chất","Cơ thể","Toàn bộ phản ứng hóa học xảy ra trong cơ thể.","Ăn uống và hô hấp cung cấp nguyên liệu cho trao đổi chất."],
+ ["Chọn lọc tự nhiên","Tiến hóa","Quá trình cá thể có đặc điểm phù hợp dễ sống sót và sinh sản hơn.","Vi khuẩn kháng thuốc là một ví dụ về chọn lọc."],
+ ["Thích nghi","Tiến hóa","Đặc điểm giúp sinh vật sống và sinh sản tốt trong môi trường.","Lông dày giúp gấu Bắc Cực thích nghi với khí hậu lạnh."],
+ ["Hô hấp tế bào","Cơ thể","Quá trình giải phóng năng lượng từ chất hữu cơ.","Phần lớn hô hấp tế bào diễn ra trong ti thể."],
+ ["Đa dạng sinh học","Sinh thái","Sự phong phú về gen, loài và hệ sinh thái.","Rừng nhiệt đới có đa dạng sinh học cao."]
+];
+const categories=["Tất cả",...new Set(words.map(w=>w[1]))];let active="Tất cả";
+const topicEl=document.querySelector("#topics"),wordsEl=document.querySelector("#words"),chipsEl=document.querySelector("#chips"),searchEl=document.querySelector("#search"),modal=document.querySelector("#modal");
+topics.forEach(t=>{const b=document.createElement("button");b.className="topic";b.innerHTML='<span class="topic-icon">'+t.icon+'</span><h3>'+t.title+'</h3><p>'+t.desc+'</p><span class="tag">Xem tóm tắt →</span>';b.onclick=()=>openModal(t.title,t.detail,"💡 Gợi ý: Hãy tự vẽ sơ đồ hoặc kể lại nội dung bằng lời của em.");topicEl.appendChild(b)});
+function renderChips(){chipsEl.innerHTML="";categories.forEach(c=>{const b=document.createElement("button");b.className="chip"+(active===c?" active":"");b.textContent=c;b.onclick=()=>{active=c;renderChips();renderWords()};chipsEl.appendChild(b)})}
+function renderWords(){const q=searchEl.value.trim().toLocaleLowerCase("vi");const result=words.filter(w=>(active==="Tất cả"||w[1]===active)&&(!q||w.join(" ").toLocaleLowerCase("vi").includes(q)));wordsEl.innerHTML="";if(!result.length){wordsEl.innerHTML='<p class="empty">Chưa tìm thấy thuật ngữ phù hợp.</p>';return}result.forEach(w=>{const b=document.createElement("button");b.className="word";b.innerHTML="<strong>"+w[0]+"</strong><span>"+w[1]+"</span>";b.onclick=()=>openModal(w[0],w[2],"Ví dụ: "+w[3]);wordsEl.appendChild(b)})}
+function openModal(title,definition,example){document.querySelector("#modal-title").textContent=title;document.querySelector("#modal-definition").textContent=definition;document.querySelector("#modal-example").textContent=example;modal.classList.add("open")}
+document.querySelector(".close").onclick=()=>modal.classList.remove("open");modal.onclick=e=>{if(e.target===modal)modal.classList.remove("open")};document.addEventListener("keydown",e=>{if(e.key==="Escape")modal.classList.remove("open")});
+searchEl.addEventListener("input",renderWords);document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>document.querySelector("#"+b.dataset.go).scrollIntoView({behavior:"smooth"}));
+renderChips();renderWords();
+</script>
+</body>
+</html>
