@@ -64,6 +64,19 @@ const readCurrentStudent = () => {
     return { ...profile, id: localStorage.getItem('bioedu_student_id') || profile.id || '' };
   } catch { return null; }
 };
+const useAssignmentClock = () => {
+  const [now,setNow] = useState(Date.now());
+  useEffect(() => { const timer=setInterval(()=>setNow(Date.now()),30000); return ()=>clearInterval(timer); },[]);
+  return now;
+};
+const assignmentIsAvailable = (item,now=Date.now()) => {
+  const scheduledAt = item?.releaseAt ? Date.parse(item.releaseAt) : 0;
+  if (scheduledAt && scheduledAt > now) return false;
+  const assignedClass = String(item?.targetClass || '').trim();
+  if (!assignedClass) return true;
+  return String(readCurrentStudent()?.className || '').trim() === assignedClass;
+};
+const assignmentStartLabel = item => item?.releaseAt ? new Date(item.releaseAt).toLocaleString('vi-VN') : '';
 const recordLearningResult = async result => {
   let current = [];
   try { current = JSON.parse(localStorage.getItem('bioedu_results') || '[]'); } catch {}
@@ -961,7 +974,7 @@ const ExternalWorksheetPlayer = ({ item, onExit }) => {
   }, [item]);
   return <div className="min-h-screen -mx-5 -mt-0 bg-slate-100 md:-mx-10">
     <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-cyan-900/15 bg-cyan-800 px-5 py-4 text-white shadow-md md:px-10">
-      <div><button onClick={onExit} className="mb-1 text-xs font-bold text-cyan-100 hover:text-white">← Quay lại phiếu học tập</button><h2 className="text-lg font-extrabold md:text-2xl">{item.title}</h2><p className="mt-1 text-sm font-semibold text-cyan-100">Thông tin học sinh lấy từ lần đăng nhập web</p></div>
+      <div><button onClick={onExit} className="mb-1 text-xs font-bold text-cyan-100 hover:text-white">← Quay lại phiếu học tập</button><h2 className="text-lg font-extrabold md:text-2xl">{item.title}</h2><p className="mt-1 text-sm font-semibold text-cyan-100">Thời gian làm bài: {item.timeLimitMinutes||item.worksheet?.timeLimit||15} phút</p></div>
       <a href={src} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-cyan-800">Mở toàn màn hình</a>
     </header>
     <iframe ref={frameRef} src={src} onLoad={event=>event.currentTarget.contentWindow?.postMessage({ type:'biobilingual-worksheet-init', student:readCurrentStudent() || {} }, '*')} title={item.title} className="h-[calc(100vh-96px)] min-h-[720px] w-full bg-white"/>
@@ -976,6 +989,7 @@ const MaterialsTab = ({ selectedPath, onPathChange }) => {
   const [selectedMaterialChapter, setSelectedMaterialChapter] = useState(selectedPath?.chapterId || null);
   const [selectedMaterialLesson, setSelectedMaterialLesson] = useState(selectedPath?.lesson || '');
   const [uploadedMaterials, setUploadedMaterials] = useState(() => { try { return JSON.parse(localStorage.getItem('bioedu_materials_library') || '[]'); } catch { return []; } });
+  const assignmentNow = useAssignmentClock();
   useEffect(() => {
     const goBack = () => { if (worksheetExamItem) setWorksheetExamItem(null); else setActivePin(null); };
     window.addEventListener('bioedu-local-back', goBack);
@@ -1064,15 +1078,16 @@ const MaterialsTab = ({ selectedPath, onPathChange }) => {
   const materialSelectionLabel = selectedMaterialLesson ? `Lớp ${selectedMaterialGrade} • ${activeMaterialChapter?.title || ''} • ${selectedMaterialLesson}` : `Lớp ${selectedMaterialGrade} • Hãy chọn chương và bài học`;
 
   const uploadedWorksheetItems = uploadedMaterials.filter(item => item.type === 'worksheet').map(item => ({ ...item, subtitle: item.description || 'Phiếu học tập được giáo viên tải lên.', updated: item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('vi-VN') : 'Mới cập nhật', size: item.worksheetUrl ? 'Phiếu HTML tương tác' : (item.size ? `${Math.max(1, Math.round(item.size / 1024))} KB` : 'Tệp học liệu'), badge: 'Mới', color: 'from-emerald-500 to-teal-600' }));
-  const filteredWorksheetItems = [...worksheetItems, ...uploadedWorksheetItems].filter(item => String(item.grade) === String(selectedMaterialGrade) && (!item.lesson || item.lesson === selectedMaterialLesson));
+  const filteredWorksheetItems = [...worksheetItems, ...uploadedWorksheetItems].filter(item => assignmentIsAvailable(item,assignmentNow) && String(item.grade) === String(selectedMaterialGrade) && (!item.lesson || item.lesson === selectedMaterialLesson));
   const isWorksheetLessonSelected = Boolean(selectedMaterialLesson);
-  const allWorksheetItems = [...worksheetItems, ...uploadedWorksheetItems];
+  const allWorksheetItems = [...worksheetItems, ...uploadedWorksheetItems].filter(item => assignmentIsAvailable(item,assignmentNow));
   const visibleWorksheetItems = isWorksheetLessonSelected ? filteredWorksheetItems : allWorksheetItems;
   const isShowingAllWorksheets = !isWorksheetLessonSelected;
   const uploadedVideoLessons = uploadedMaterials.filter(item => item.type === 'video').map(item => ({ ...item, duration: 'Video mới', level: `Sinh học ${item.grade}` }));
   const filteredVideoLessons = [...videoLessons, ...uploadedVideoLessons].filter(item => item.grade === selectedMaterialGrade && (!item.chapterId || item.chapterId === selectedMaterialChapter) && (!item.lesson || item.lesson === selectedMaterialLesson));
 
   const startWorksheetExam = (item) => {
+    if (!assignmentIsAvailable(item)) return;
     setWorksheetExamItem(item);
   };
 
@@ -1923,6 +1938,8 @@ const QuestionBankTab = ({ selectedPath }) => {
     return () => window.removeEventListener('bioedu-local-back', goBack);
   }, []);
   const [uploadedExamQuestions, setUploadedExamQuestions] = useState(() => { try { return JSON.parse(localStorage.getItem('bioedu_exam_bank') || '[]'); } catch { return []; } });
+  const assignmentNow = useAssignmentClock();
+  const autoSubmittedRef = useRef(false);
   useEffect(() => {
     const sync = () => { try { setUploadedExamQuestions(JSON.parse(localStorage.getItem('bioedu_exam_bank') || '[]')); } catch {} };
     window.addEventListener('storage', sync); window.addEventListener('bioedu-shared-update', sync);
@@ -1932,16 +1949,21 @@ const QuestionBankTab = ({ selectedPath }) => {
   const selectedChapterForExam = (courseData[practiceGrade] || []).find(chapter => chapter.id === practiceChapterId);
   const uploadedBundles = uploadedExamQuestions.filter(item => Array.isArray(item.questions) && item.questions.length === 14);
   const sameLesson = item => { const uploaded=normalizedText(item.lesson);const selected=normalizedText(practiceLesson);return !selected||uploaded===selected||uploaded.includes(selected)||selected.includes(uploaded); };
-  const activeUploadedExam = uploadedBundles.find(item => String(item.grade)===String(practiceGrade)&&sameLesson(item)) || uploadedBundles.find(item => String(item.grade)===String(practiceGrade));
+  const scheduledUploadedExam = uploadedBundles.find(item => String(item.grade)===String(practiceGrade)&&sameLesson(item)) || uploadedBundles.find(item => String(item.grade)===String(practiceGrade));
+  const activeUploadedExam = uploadedBundles.filter(item=>assignmentIsAvailable(item,assignmentNow)).find(item => String(item.grade)===String(practiceGrade)&&sameLesson(item)) || uploadedBundles.filter(item=>assignmentIsAvailable(item,assignmentNow)).find(item => String(item.grade)===String(practiceGrade));
+  const examDurationMinutes = Number(activeUploadedExam?.timeLimitMinutes||15);
   const availableQuestionBank = activeUploadedExam?.questions?.length ? activeUploadedExam.questions.map((q,index)=>({...q,id:q.id||`admin-${activeUploadedExam.id}-${index}`,group:q.kind==='choice'?'Trắc nghiệm':q.kind==='tf'?'Đúng/Sai':'Trả lời ngắn'})) : adminQuestionBank;
   useEffect(() => { if (state === 'choice' || state === 'theory') setState('browse'); }, [state]);
   const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
   const createExam = () => {
+    if (scheduledUploadedExam && !assignmentIsAvailable(scheduledUploadedExam,assignmentNow)) return;
+    autoSubmittedRef.current=false;
     const pick = (kind, n) => { const primary=shuffle(availableQuestionBank.filter(q=>q.kind===kind));const fallback=shuffle(adminQuestionBank.filter(q=>q.kind===kind&& !primary.some(item=>item.id===q.id)));return [...primary,...fallback].slice(0,n); };
     setExam([...pick('choice',10), ...pick('tf',2), ...pick('short',2)]);
     setAnswers({}); setSeconds(0); setScore(0); setState('testing');
   };
   useEffect(() => { if (state !== 'testing') return; const timer=setInterval(()=>setSeconds(s=>s+1),1000); return ()=>clearInterval(timer); }, [state]);
+  useEffect(() => { if (state==='testing' && seconds>=examDurationMinutes*60 && !autoSubmittedRef.current) { autoSubmittedRef.current=true; submit(); } }, [state,seconds,examDurationMinutes]);
   const correct = (q) => {
     const answer = answers[q.id];
     if (q.kind === 'choice') return answer === q.answer;
