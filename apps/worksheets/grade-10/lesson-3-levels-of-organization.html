@@ -117,42 +117,6 @@
         </div>
     </header>
 
-    <div id="student-info-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in border-t-8 border-deep-pink">
-            <h2 class="text-2xl font-bold text-dark-blue mb-2">Welcome to the Worksheet!</h2>
-            <p class="text-gray-600 mb-6 text-sm font-medium">Time limit: 15 minutes &bull; Total score: 10 points</p>
-            
-            <div class="space-y-5">
-                <div>
-                    <label for="student-name" class="block text-sm font-semibold text-gray-700 mb-1">FULL NAME <span class="text-red-500">*</span></label>
-                    <input type="text" id="student-name" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-dark-blue focus:border-dark-blue outline-none transition-all placeholder-gray-400" placeholder="Enter your full name">
-                </div>
-                <div>
-                    <label for="student-class" class="block text-sm font-semibold text-gray-700 mb-1">CLASS <span class="text-red-500">*</span></label>
-                    <input type="text" id="student-class" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-dark-blue focus:border-dark-blue outline-none transition-all placeholder-gray-400" placeholder="Enter your class">
-                </div>
-            </div>
-
-            <div class="mt-8">
-                <button id="start-btn" disabled class="w-full color-yellow text-dark-blue font-bold text-lg py-3 px-6 rounded-xl shadow hover:shadow-lg transform transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-                    START THE WORKSHEET
-                </button>
-            </div>
-            
-            <div class="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <h3 class="font-bold text-dark-blue text-sm mb-1 flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Student Instructions
-                </h3>
-                <p class="text-xs text-gray-700 leading-relaxed font-medium">
-                    Read each question carefully and complete the tasks in order. For the drag-and-drop and matching questions, select the correct corresponding components. For the situational question, answer briefly based on your knowledge of the levels of organization of the living world.
-                </p>
-            </div>
-        </div>
-    </div>
-
     <div id="custom-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center border-t-8 border-deep-pink fade-in">
             <h3 id="modal-title" class="text-2xl font-bold text-dark-blue mb-3">Alert</h3>
@@ -442,10 +406,7 @@
         let selectedDragItem = null; // Touch drag state
 
         // DOM Elements
-        const modal = document.getElementById('student-info-modal');
-        const nameInput = document.getElementById('student-name');
-        const classInput = document.getElementById('student-class');
-        const startBtn = document.getElementById('start-btn');
+        let studentInfo = { name: 'Học sinh', className: '' };
         const worksheetContent = document.getElementById('worksheet-content');
         const timerDisplay = document.getElementById('timer-display');
         const timeLeftSpan = document.getElementById('time-left');
@@ -484,32 +445,23 @@
             if (modalConfirmCallback) modalConfirmCallback(false);
         });
 
+        window.addEventListener('message', event => {
+            if (event.data?.type === 'biobilingual-worksheet-init') {
+                studentInfo = { name: event.data.student?.name || 'Học sinh', className: event.data.student?.className || '' };
+            }
+        });
         document.addEventListener('DOMContentLoaded', () => {
-            validateInputs();
-            nameInput.addEventListener('input', validateInputs);
-            classInput.addEventListener('input', validateInputs);
-            
-            startBtn.addEventListener('click', startWorksheet);
             gradeBtn.addEventListener('click', () => {
                 showModal("Confirm Grading", "Are you sure you want to grade your worksheet now?", true, (confirmed) => {
                     if(confirmed) gradeWorksheet();
                 });
             });
-            
             initQ1();
             initQ2();
+            startWorksheet();
         });
 
-        function validateInputs() {
-            if(nameInput.value.trim() !== '' && classInput.value.trim() !== '') {
-                startBtn.removeAttribute('disabled');
-            } else {
-                startBtn.setAttribute('disabled', 'true');
-            }
-        }
-
         function startWorksheet() {
-            modal.classList.add('hidden');
             worksheetContent.classList.remove('hidden');
             timerDisplay.classList.remove('hidden');
             startTimer();
@@ -1032,8 +984,8 @@
             const resultsContainer = document.getElementById('results-container');
             resultsContainer.classList.remove('hidden');
             
-            document.getElementById('res-name').textContent = nameInput.value;
-            document.getElementById('res-class').textContent = classInput.value;
+            document.getElementById('res-name').textContent = studentInfo.name;
+            document.getElementById('res-class').textContent = studentInfo.className || '—';
             document.getElementById('res-score').textContent = totalScore;
             document.getElementById('res-correct-qs').textContent = completelyCorrectQs;
             
@@ -1053,6 +1005,18 @@
                 feedbackEl.textContent = "Review the lesson!";
                 feedbackEl.className = "font-black text-red-600 text-2xl mt-1";
             }
+
+            const wrongQuestions = [
+                !q1AllCorrect && { number: 1, prompt: 'Drag and drop', details: q1Score + '/2' },
+                !q2AllCorrect && { number: 2, prompt: 'Matching', details: q2Score + '/2' },
+                !q3AllCorrect && { number: 3, prompt: 'Multiple choice', details: q3Selected ? 'Incorrect answer' : 'No answer' },
+                !q4AllCorrect && { number: 4, prompt: 'True / False', details: q4Score + '/2' },
+                !q5AllCorrect && { number: 5, prompt: 'Situational question', details: q5Score + '/2' }
+            ].filter(Boolean);
+            window.parent.postMessage({
+                type: 'biobilingual-worksheet-result',
+                result: { score: totalScore, maxScore: 10, correctCount: completelyCorrectQs, totalQuestions: 5, wrongQuestions }
+            }, '*');
 
             // Scroll to results automatically after explicit click
             setTimeout(() => {
