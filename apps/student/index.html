@@ -936,12 +936,35 @@ const WorksheetPlayer = ({ item, onExit }) => {
 
 const ExternalWorksheetPlayer = ({ item, onExit }) => {
   const src = item.worksheetUrl || item.source || '';
+  const frameRef = useRef(null);
+  const resultSavedRef = useRef(false);
+  useEffect(() => {
+    const sendStudent = () => frameRef.current?.contentWindow?.postMessage({ type:'biobilingual-worksheet-init', student:readCurrentStudent() || {} }, '*');
+    const receiveResult = event => {
+      if (event.source !== frameRef.current?.contentWindow || event.data?.type !== 'biobilingual-worksheet-result' || resultSavedRef.current) return;
+      const result = event.data.result || {};
+      resultSavedRef.current = true;
+      const student = readCurrentStudent() || {};
+      recordLearningResult({
+        id: `worksheet-result-${item.id}-external-${Date.now()}-${student.id || 'guest'}`,
+        kind:'worksheet', sourceId:item.id, sourceTitle:item.title,
+        studentId:student.id || '', studentName:student.name || 'Học sinh', email:student.email || '',
+        grade:String(student.block || student.grade || item.grade || ''), className:student.className || '',
+        score:Number(result.score || 0), maxScore:Number(result.maxScore || 10),
+        correctCount:Number(result.correctCount || 0), totalQuestions:Number(result.totalQuestions || 5),
+        wrongQuestions:Array.isArray(result.wrongQuestions) ? result.wrongQuestions : [],
+        completedAt:new Date().toISOString()
+      });
+    };
+    window.addEventListener('message', receiveResult);
+    return () => window.removeEventListener('message', receiveResult);
+  }, [item]);
   return <div className="min-h-screen -mx-5 -mt-0 bg-slate-100 md:-mx-10">
     <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-3 border-b border-cyan-900/15 bg-cyan-800 px-5 py-4 text-white shadow-md md:px-10">
-      <div><button onClick={onExit} className="mb-1 text-xs font-bold text-cyan-100 hover:text-white">← Quay lại phiếu học tập</button><h2 className="text-lg font-extrabold md:text-2xl">{item.title}</h2><p className="mt-1 text-sm font-semibold text-cyan-100">Phiếu tương tác theo bài học</p></div>
+      <div><button onClick={onExit} className="mb-1 text-xs font-bold text-cyan-100 hover:text-white">← Quay lại phiếu học tập</button><h2 className="text-lg font-extrabold md:text-2xl">{item.title}</h2><p className="mt-1 text-sm font-semibold text-cyan-100">Thông tin học sinh lấy từ lần đăng nhập web</p></div>
       <a href={src} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-white px-4 py-2.5 text-sm font-extrabold text-cyan-800">Mở toàn màn hình</a>
     </header>
-    <iframe src={src} title={item.title} className="h-[calc(100vh-96px)] min-h-[720px] w-full bg-white" sandbox="allow-scripts allow-forms allow-modals"/>
+    <iframe ref={frameRef} src={src} onLoad={event=>event.currentTarget.contentWindow?.postMessage({ type:'biobilingual-worksheet-init', student:readCurrentStudent() || {} }, '*')} title={item.title} className="h-[calc(100vh-96px)] min-h-[720px] w-full bg-white"/>
   </div>;
 };
 
