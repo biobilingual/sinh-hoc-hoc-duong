@@ -333,6 +333,7 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
   const [showTranslations, setShowTranslations] = useState(false);
   const [hintCount, setHintCount] = useState(0);
   const [listeningResult, setListeningResult] = useState(null);
+  const [typingResult, setTypingResult] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [matchNotice, setMatchNotice] = useState('');
   const [listSearch, setListSearch] = useState('');
@@ -378,6 +379,7 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
     setCurrentWordList(words);
     setCurrentIndex(0);
     setScore(0);
+    setTypingResult(null);
     setStep('study');
     if(words.length > 0) generateQuizOptions(words[0], words);
   };
@@ -417,6 +419,7 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
     setShowTranslations(false);
     setHintCount(0);
     setListeningResult(null);
+    setTypingResult(null);
     setSelectedMatch(null);
     setMatchNotice('');
     if (currentIndex + 1 < currentWordList.length) {
@@ -425,6 +428,15 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
     } else {
       setStep('results');
     }
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex === 0) return;
+    const previousIndex = currentIndex - 1;
+    setCurrentIndex(previousIndex);
+    setIsFlipped(false); setTypeInput(''); setShowTranslations(false); setHintCount(0);
+    setListeningResult(null); setTypingResult(null); setSelectedMatch(null); setMatchNotice('');
+    generateQuizOptions(currentWordList[previousIndex], currentWordList);
   };
 
   if (step === 'config') {
@@ -453,7 +465,7 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
     return (
       <div className="animate-fade-in max-w-5xl mx-auto pb-16">
         
-        <div ref={lessonScrollerRef} onScroll={syncLessonScroll} className="lesson-scroller flex overflow-x-auto gap-3 pb-4 mb-2 snap-x scroll-smooth">
+        <div ref={lessonScrollerRef} onScroll={syncLessonScroll} className="lesson-scroller hide-scrollbar flex overflow-x-auto gap-3 pb-2 mb-2 snap-x scroll-smooth">
           {lessonList.map(lesson => (
             <button
               key={lesson}
@@ -692,18 +704,18 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
     const activeMode = studyMode === 'special' ? specialKind : studyMode;
     const timed = ['quiz','listening'].includes(activeMode);
     const matchWords = currentWordList.slice(currentIndex, Math.min(currentIndex + 4, currentWordList.length));
-    const submitTyping = () => handleNext(typeInput.trim().toLowerCase() === info.en.toLowerCase());
+    const submitTyping = () => setTypingResult(typeInput.trim().toLowerCase() === info.en.toLowerCase());
     const chooseMatch = (target) => {
       if (!selectedMatch) { setMatchNotice('Hãy chọn một từ tiếng Anh trước.'); return; }
       const chosen = matchWords.find(x => x.id === selectedMatch);
-      if (chosen && chosen.id === target.id) { setMatchNotice('Chính xác!'); setTimeout(() => handleNext(true), 500); }
+      if (chosen && chosen.id === target.id) { setMatchNotice('Chính xác!'); }
       else { setMatchNotice('Chưa đúng, hãy thử lại.'); setSelectedMatch(null); }
     };
 
     return <div className="max-w-4xl mx-auto animate-fade-in pb-10">
       <div className="bg-white border border-blue-100 rounded-3xl shadow-sm p-5 md:p-7">
         <div className="flex justify-between items-center gap-4 mb-4">
-          <button onClick={() => setStep('config')} className="text-slate-500 hover:text-blue-700 font-semibold">← Quay lại / Back</button>
+          <div className="flex items-center gap-3"><button onClick={() => setStep('config')} className="text-slate-500 hover:text-blue-700 font-semibold">← Quay lại / Back</button>{currentIndex > 0 && <button onClick={handlePrevious} className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-600 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">← Câu trước / Previous</button>}</div>
           <div className="flex items-center gap-3"><span className="text-sm font-bold text-slate-500">{currentIndex + 1}/{currentWordList.length}</span>{timed && <span className={`px-3 py-1.5 rounded-full font-extrabold text-sm ${timeLeft <= 5 ? 'bg-rose-100 text-rose-600' : 'bg-blue-50 text-blue-700'}`}>⏱ {timeLeft}s</span>}</div>
         </div>
         <div className="h-2 rounded-full bg-slate-100 overflow-hidden mb-7"><div className="h-full bg-blue-600 transition-all" style={{width:`${progress}%`}} /></div>
@@ -712,8 +724,8 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
         {studyMode === 'special' && <div className="mb-6 px-5 py-4 rounded-2xl bg-violet-50 border border-violet-100 text-left"><p className="text-xs font-extrabold tracking-wide text-violet-600 uppercase">Chế độ đặc biệt</p><p className="font-bold text-slate-800 mt-1">Tổng hợp: Flashcard · Quiz · Listening · Typing · Ghép cặp</p></div>}
 
         {activeMode === 'flashcard' && <div className="text-center">
-          <button onClick={() => setIsFlipped(!isFlipped)} aria-label={isFlipped ? 'Xem mặt trước' : 'Xem mặt sau'} className={`w-full min-h-[440px] rounded-[2.35rem] overflow-hidden shadow-xl text-center transition-all hover:scale-[1.005] ${isFlipped ? 'bg-gradient-to-br from-teal-400 to-blue-500' : 'bg-gradient-to-br from-indigo-400 to-violet-700'}`}>
-            {!isFlipped ? <div className="min-h-[440px] px-7 py-10 flex flex-col items-center justify-center text-white"><img src={info.image||vocabImage} alt={`Hình minh họa ${info.en}`} className="h-44 w-56 rounded-3xl object-cover shadow-lg ring-4 ring-white/25" /><h2 className="mt-8 text-4xl md:text-6xl font-extrabold text-slate-950"><span role="button" tabIndex="0" onClick={(e)=>{e.stopPropagation();speakWord(info.en,word.id)}} onKeyDown={(e)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();speakWord(info.en,word.id)}}} className="cursor-pointer">{info.en}</span></h2><span className="mt-5 inline-flex px-5 py-2 rounded-full bg-white/30 text-white text-lg font-extrabold uppercase">{info.pos}</span></div> : <div className="min-h-[440px] px-7 py-10 flex flex-col items-center justify-center text-white"><p className="text-sm font-extrabold tracking-[0.16em] uppercase text-white/80">Nghĩa</p><p className="mt-4 max-w-3xl text-2xl md:text-4xl font-extrabold leading-tight text-slate-950">{info.meaning}</p><div className="mt-8 grid w-full max-w-2xl gap-4 text-left md:grid-cols-2"><div className="rounded-2xl bg-white/20 p-4"><p className="text-xs font-extrabold uppercase tracking-wider text-white/75">Phiên âm</p><p className="mt-1 text-xl font-bold text-white">{info.pronunciation}</p></div><div className="rounded-2xl bg-white/20 p-4"><p className="text-xs font-extrabold uppercase tracking-wider text-white/75">Nghĩa tiếng Việt</p><p className="mt-1 text-xl font-bold text-white">{info.vi}</p></div></div></div>}
+          <button onClick={() => setIsFlipped(!isFlipped)} aria-label={isFlipped ? 'Xem mặt trước' : 'Xem mặt sau'} className={`w-full min-h-[350px] rounded-[1.75rem] overflow-hidden shadow-xl text-center transition-all hover:scale-[1.005] ${isFlipped ? 'bg-gradient-to-br from-teal-400 to-blue-500' : 'bg-gradient-to-br from-indigo-400 to-violet-700'}`}>
+            {!isFlipped ? <div className="min-h-[350px] px-7 py-8 flex flex-col items-center justify-center text-white"><img src={info.image||vocabImage} alt={`Hình minh họa ${info.en}`} className="h-32 w-44 rounded-2xl object-cover shadow-lg ring-4 ring-white/25" /><h2 className="mt-6 text-4xl md:text-5xl font-extrabold text-slate-950"><span role="button" tabIndex="0" onClick={(e)=>{e.stopPropagation();speakWord(info.en,word.id)}} onKeyDown={(e)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();speakWord(info.en,word.id)}}} className="cursor-pointer">{info.en}</span></h2><span className="mt-4 inline-flex px-5 py-2 rounded-full bg-white/30 text-white text-lg font-extrabold uppercase">{info.pos}</span></div> : <div className="min-h-[350px] px-7 py-8 flex flex-col items-center justify-center text-white"><p className="text-sm font-extrabold tracking-[0.16em] uppercase text-white/80">Nghĩa</p><p className="mt-3 max-w-3xl text-3xl md:text-5xl font-extrabold leading-tight text-slate-950">{info.meaning}</p><div className="mt-6 grid w-full max-w-2xl gap-4 text-left md:grid-cols-2"><div className="rounded-2xl bg-white/20 p-4"><p className="text-xs font-extrabold uppercase tracking-wider text-white/75">Phiên âm</p><p className="mt-1 text-2xl md:text-3xl font-bold text-white">{info.pronunciation}</p></div><div className="rounded-2xl bg-white/20 p-4"><p className="text-xs font-extrabold uppercase tracking-wider text-white/75">Nghĩa tiếng Việt</p><p className="mt-1 text-2xl md:text-3xl font-bold text-white">{info.vi}</p></div></div></div>}
           </button>
           <div className="grid grid-cols-2 gap-3 mt-6"><button onClick={()=>handleNext(false)} className="py-3 rounded-xl border border-rose-200 text-rose-600 font-bold hover:bg-rose-50">Chưa thuộc / Not learned</button><button onClick={()=>handleNext(true)} className="py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700">Đã thuộc / Learned</button></div>
         </div>}
@@ -722,9 +734,9 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
 
         {activeMode === 'listening' && <div className="text-center py-5"><p className="text-sm font-bold text-sky-600 uppercase tracking-wide">Nghe và gõ lại từ vựng / Listen & type</p><button onClick={()=>speakWord(info.en, word.id)} className="mx-auto mt-7 w-20 h-20 rounded-full bg-sky-50 text-sky-600 text-3xl border border-sky-100 hover:bg-sky-100" title="Nghe giọng Mỹ / US pronunciation">🔊</button><p className="text-slate-500 mt-4">Nhấn để nghe lại / Listen again</p><input autoFocus value={typeInput} onChange={e=>setTypeInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&setListeningResult(typeInput.trim().toLowerCase()===info.en.toLowerCase())} placeholder="Gõ từ tiếng Anh / Type the English word..." className="w-full max-w-xl mt-8 px-5 py-4 rounded-2xl border-2 border-sky-300 text-center text-xl outline-none focus:border-sky-500"/><button onClick={()=>setListeningResult(typeInput.trim().toLowerCase()===info.en.toLowerCase())} className="mt-5 px-8 py-3 rounded-xl bg-sky-600 text-white font-bold">Kiểm tra / Check</button>{listeningResult !== null && <div className={`max-w-xl mx-auto mt-5 p-4 rounded-xl ${listeningResult?'bg-emerald-50 text-emerald-700':'bg-rose-50 text-rose-700'}`}><p className="font-bold">{listeningResult?'Chính xác! / Correct!':'Chưa đúng / Not quite.'}</p><p className="mt-1">Đáp án / Answer: <button type="button" onClick={()=>speakWord(info.en, word.id)} className="font-bold underline decoration-dotted underline-offset-4">{info.en}</button></p><button onClick={()=>handleNext(listeningResult)} className="mt-4 px-5 py-2 rounded-lg bg-white/80 border border-current font-bold">Từ tiếp theo / Next word</button></div>}</div>}
 
-        {activeMode === 'typing' && <div className="text-center py-3"><h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">{word.def}</h2><div className="mt-4 flex justify-center items-center gap-3"><button onClick={()=>speakWord(info.en, word.id)} className="text-sky-500 text-xl" title="Nghe giọng Mỹ / US pronunciation">🔊</button><span className="px-4 py-1.5 rounded-full bg-violet-100 text-violet-700 text-sm font-extrabold uppercase">{info.pos}</span></div><p className="mt-5 italic text-slate-400">{hintCount ? `Gợi ý / Hint: ${info.en.slice(0,hintCount)}${' •'.repeat(Math.max(0,info.en.length-hintCount))}` : 'Chưa có gợi ý / No hint yet'}</p><input autoFocus value={typeInput} onChange={e=>setTypeInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitTyping()} placeholder="Gõ từ tiếng Anh / Type the English word..." className="w-full max-w-xl mt-9 px-6 py-4 rounded-full border-[3px] border-sky-400 text-center text-xl outline-none focus:ring-4 focus:ring-sky-100"/><div className="flex flex-wrap justify-center gap-3 mt-7"><button disabled={hintCount>=2} onClick={()=>setHintCount(Math.min(2,hintCount+1))} className="px-5 py-3 rounded-xl border border-slate-200 font-bold text-slate-700 disabled:opacity-50">Gợi ý / Hint ({hintCount}/2)</button><button onClick={submitTyping} className="px-8 py-3 rounded-xl bg-green-600 text-white font-extrabold shadow-sm">Kiểm tra / Check</button></div>{hintCount >= 2 && <p className="mt-5 text-slate-500"><strong>Ví dụ / Example:</strong> {info.example} — {info.exampleVi}</p>}</div>}
+        {activeMode === 'typing' && <div className="text-center py-3"><h2 className="text-2xl md:text-3xl font-extrabold text-slate-900">{word.def}</h2><div className="mt-4 flex justify-center items-center gap-3"><button onClick={()=>speakWord(info.en, word.id)} className="text-sky-500 text-xl" title="Nghe giọng Mỹ / US pronunciation">🔊</button><span className="px-4 py-1.5 rounded-full bg-violet-100 text-violet-700 text-sm font-extrabold uppercase">{info.pos}</span></div><p className="mt-5 italic text-slate-400">{hintCount ? \`Gợi ý / Hint: \${info.en.slice(0,hintCount)}\${' •'.repeat(Math.max(0,info.en.length-hintCount))}\` : 'Chưa có gợi ý / No hint yet'}</p><input autoFocus value={typeInput} onChange={e=>setTypeInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&submitTyping()} placeholder="Gõ từ tiếng Anh / Type the English word..." className="w-full max-w-xl mt-9 px-6 py-4 rounded-full border-[3px] border-sky-400 text-center text-xl outline-none focus:ring-4 focus:ring-sky-100"/><div className="flex flex-wrap justify-center gap-3 mt-7"><button disabled={hintCount>=2} onClick={()=>setHintCount(Math.min(2,hintCount+1))} className="px-5 py-3 rounded-xl border border-slate-200 font-bold text-slate-700 disabled:opacity-50">Gợi ý / Hint ({hintCount}/2)</button><button onClick={submitTyping} className="px-8 py-3 rounded-xl bg-green-600 text-white font-extrabold shadow-sm">Kiểm tra / Check</button></div>{typingResult !== null && <div className={\`max-w-xl mx-auto mt-5 p-4 rounded-xl \${typingResult?'bg-emerald-50 text-emerald-700':'bg-rose-50 text-rose-700'}\`}><p className="font-bold">{typingResult?'Chính xác! / Correct!':'Chưa đúng / Not quite.'}</p><p className="mt-1">Đáp án / Answer: <button type="button" onClick={()=>speakWord(info.en, word.id)} className="font-bold underline decoration-dotted underline-offset-4">{info.en}</button></p><button onClick={()=>handleNext(typingResult)} className="mt-4 px-5 py-2 rounded-lg bg-white/80 border border-current font-bold">Từ tiếp theo / Next word</button></div>}{hintCount >= 2 && <p className="mt-5 text-slate-500"><strong>Ví dụ / Example:</strong> {info.example} — {info.exampleVi}</p>}</div>}
 
-        {activeMode === 'match' && <div><div className="text-center mb-6"><p className="text-sm font-bold text-cyan-600 uppercase tracking-wide">Ghép cặp</p><h2 className="text-2xl font-extrabold text-slate-900 mt-2">Chọn từ tiếng Anh rồi chọn nghĩa phù hợp</h2></div><div className="grid md:grid-cols-2 gap-4"><div className="space-y-3">{matchWords.map(w=><button key={w.id} onClick={()=>{speakWord(vocabInfo(w).en,w.id);setSelectedMatch(w.id);setMatchNotice('')}} className={`w-full p-4 rounded-xl border text-left font-bold transition ${selectedMatch===w.id?'border-blue-500 bg-blue-50 text-blue-700':'border-slate-200 text-slate-800 hover:border-blue-300'}`}>{vocabInfo(w).en}</button>)}</div><div className="space-y-3">{[...matchWords].sort((a,b)=>b.id-a.id).map(w=><button key={w.id} onClick={()=>chooseMatch(w)} className="w-full p-4 rounded-xl border border-slate-200 text-left text-slate-700 hover:border-cyan-400 hover:bg-cyan-50 transition">{w.def}</button>)}</div></div>{matchNotice&&<p className={`text-center mt-5 font-bold ${matchNotice.startsWith('Chính')?'text-emerald-600':'text-rose-600'}`}>{matchNotice}</p>}</div>}
+        {activeMode === 'match' && <div><div className="text-center mb-6"><p className="text-sm font-bold text-cyan-600 uppercase tracking-wide">Ghép cặp</p><h2 className="text-2xl font-extrabold text-slate-900 mt-2">Chọn từ tiếng Anh rồi chọn nghĩa phù hợp</h2></div><div className="grid md:grid-cols-2 gap-4"><div className="space-y-3">{matchWords.map(w=><button key={w.id} onClick={()=>{speakWord(vocabInfo(w).en,w.id);setSelectedMatch(w.id);setMatchNotice('')}} className={`w-full p-4 rounded-xl border text-left font-bold transition ${selectedMatch===w.id?'border-blue-500 bg-blue-50 text-blue-700':'border-slate-200 text-slate-800 hover:border-blue-300'}`}>{vocabInfo(w).en}</button>)}</div><div className="space-y-3">{[...matchWords].sort((a,b)=>b.id-a.id).map(w=><button key={w.id} onClick={()=>chooseMatch(w)} className="w-full p-4 rounded-xl border border-slate-200 text-left text-slate-700 hover:border-cyan-400 hover:bg-cyan-50 transition">{w.def}</button>)}</div></div>{matchNotice&&<div className={`text-center mt-5 font-bold ${matchNotice.startsWith('Chính')?'text-emerald-600':'text-rose-600'}`}><p>{matchNotice}</p>{matchNotice.startsWith('Chính') && <button onClick={()=>handleNext(true)} className="mt-4 px-5 py-2 rounded-lg border border-emerald-300 bg-emerald-50 font-bold">Từ tiếp theo / Next word</button>}</div>}</div>}
       </div>
     </div>;
   }
@@ -2670,7 +2682,7 @@ function App() {
               <div className="relative">
                 <header className="flex items-start gap-4">
                   <span className={`w-[3.25rem] h-[3.25rem] min-w-[3.25rem] rounded-2xl bg-gradient-to-br ${theme.gradient} text-white flex items-center justify-center text-xl font-extrabold shadow-md`}>{chapterIndex + 1}</span>
-                  <div className="min-w-0 flex-1"><p className={`text-xs uppercase tracking-[0.14em] font-extrabold ${theme.text}`}>Chương {chapterIndex + 1}</p><h3 className="text-xl md:text-2xl font-extrabold text-slate-900 leading-snug mt-1">{chapter.title.replace(/^Chương \d+: /,'')}</h3></div>
+                  <div className="min-w-0 flex-1"><h3 className="text-xl md:text-2xl font-extrabold text-slate-900 leading-snug">{chapter.title.replace(/^Chương \d+: /,'')}</h3></div>
                   <span className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-extrabold ${theme.soft} ${theme.text}`}>{chapter.lessons.length} bài</span>
                 </header>
                 <div className="mt-5 h-1.5 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full w-1/3 rounded-full ${theme.line}`}></div></div>
