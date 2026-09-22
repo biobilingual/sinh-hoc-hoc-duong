@@ -70,6 +70,7 @@ const useAssignmentClock = () => {
   return now;
 };
 const assignmentIsAvailable = (item,now=Date.now()) => {
+  if (item?.isDraft) return false;
   const scheduledAt = item?.releaseAt ? Date.parse(item.releaseAt) : 0;
   if (scheduledAt && scheduledAt > now) return false;
   const assignedClass = String(item?.targetClass || '').trim();
