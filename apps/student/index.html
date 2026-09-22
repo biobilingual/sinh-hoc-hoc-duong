@@ -240,15 +240,14 @@ const VocabSystem = ({ selectedPath, onPathChange, initialGrade = '10' }) => {
     window.addEventListener('bioedu-local-back', goBack);
     return () => window.removeEventListener('bioedu-local-back', goBack);
   }, [step]);
-  const allLessonList = Array.from(new Set([...Object.keys(lessonVocabData), ...adminVocabSets.map(item => item.lesson).filter(Boolean)]));
+  const allLessonList = Array.from(new Set(adminVocabSets.map(item => item.lesson).filter(Boolean)));
   const lessonsForGrade = (grade) => allLessonList.filter(lesson => {
     const context = findLessonContext(lesson);
     return context ? context.grade === grade : adminVocabSets.some(item => String(item.grade) === String(grade) && item.lesson === lesson);
   });
   const wordsForLesson = (lesson) => {
-    const base = lessonVocabData[lesson] ? [...lessonVocabData[lesson]] : [];
     const uploaded = adminVocabSets.filter(item => item.lesson === lesson).flatMap(item => (item.terms || []).map((word, index) => ({ id: `admin-${item.id}-${index}`, term: word.term || word.word || '', def: word.meaning || word.definition || '', meaning: word.meaning || word.definition || '', pronunciation: word.pronunciation || '', pos: word.pos || word.partOfSpeech || '', image: word.image || '', status: 'chưa thuộc' })));
-    return [...base, ...uploaded].filter(word => word.term);
+    return uploaded.filter(word => word.term);
   };
   const selectedPathContext = selectedPath?.lesson ? findLessonContext(selectedPath.lesson) : null;
   const [selectedVocabGrade, setSelectedVocabGrade] = useState(selectedPathContext?.grade || initialGrade);
