@@ -119,29 +119,10 @@ const vocabPresentation = {
 const vocabInfo = word => { const base = vocabPresentation[word.term] || { en: word.term, pos:'noun', pronunciation:`/${word.term}/`, meaning:word.def || `A biology term used to describe ${word.term.toLowerCase()}.`, example:`${word.term} is an important biology term.`, exampleVi:word.def || `${word.term} là một thuật ngữ sinh học quan trọng.` }; return { ...base, en:word.term||base.en, pos:word.pos||base.pos, pronunciation:word.pronunciation||base.pronunciation, meaning:word.meaning||base.meaning, vi:word.def||word.meaning||base.exampleVi, image:word.image||'' }; };
 const vocabImage = 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=900&q=80';
 
-// --- DỮ LIỆU LỘ TRÌNH MẪU (Cho Trang chủ) ---
-const defaultCourseData = {
-  "10": [
-    { id: 101, title: "Chương 1: Thành phần hóa học của tế bào", vocabCount: 15, difficulty: 1, lessons: ["Bài 1: Các nguyên tố hóa học và nước", "Bài 2: Carbonhydrate và Lipid"] },
-    { id: 102, title: "Chương 2: Cấu trúc tế bào", vocabCount: 28, difficulty: 2, lessons: ["Bài 3: Cấu trúc tế bào", "Bài 4: Vận chuyển các chất qua màng"] },
-    { id: 103, title: "Chương 3: Chuyển hóa vật chất và năng lượng", vocabCount: 35, difficulty: 4, lessons: ["Bài 5: Enzyme và vai trò xúc tác", "Bài 6: Hô hấp tế bào", "Bài 7: Quang hợp"] },
-    { id: 104, title: "Chương 4: Phân bào", vocabCount: 20, difficulty: 3, lessons: ["Bài 8: Chu kỳ tế bào", "Bài 9: Nguyên phân", "Bài 10: Giảm phân"] }
-  ],
-  "11": [
-    { id: 111, title: "Chương 1: Trao đổi chất và năng lượng", vocabCount: 42, difficulty: 4, lessons: ["Bài 1: Trao đổi nước ở thực vật", "Bài 2: Dinh dưỡng nitơ", "Bài 3: Quang hợp ở thực vật"] },
-    { id: 112, title: "Chương 2: Cảm ứng ở sinh vật", vocabCount: 25, difficulty: 3, lessons: ["Bài 4: Hướng động", "Bài 5: Ứng động", "Bài 6: Cảm ứng ở động vật"] },
-    { id: 113, title: "Chương 3: Sinh trưởng và phát triển", vocabCount: 18, difficulty: 2, lessons: ["Bài 7: Hoocmôn thực vật", "Bài 8: Sinh trưởng ở động vật"] },
-    { id: 114, title: "Chương 4: Sinh sản", vocabCount: 20, difficulty: 2, lessons: ["Bài 9: Sinh sản vô tính", "Bài 10: Sinh sản hữu tính"] }
-  ],
-  "12": [
-    { id: 121, title: "Chương 1: Di truyền học", vocabCount: 50, difficulty: 5, lessons: ["Bài 1: Cơ chế di truyền và biến dị", "Bài 2: Quy luật Mendel", "Bài 3: Liên kết gen"] },
-    { id: 122, title: "Chương 2: Tiến hóa", vocabCount: 30, difficulty: 4, lessons: ["Bài 4: Bằng chứng tiến hóa", "Bài 5: Nguyên nhân tiến hóa"] },
-    { id: 123, title: "Chương 3: Sinh thái học", vocabCount: 45, difficulty: 3, lessons: ["Bài 6: Quần thể sinh vật", "Bài 7: Quần xã sinh vật", "Bài 8: Hệ sinh thái"] }
-  ]
-};
+// Chương và bài chỉ lấy từ trang Admin.
+const defaultCourseData = { "10": [], "11": [], "12": [] };
 
-// Gộp cấu trúc mẫu với chương và bài do quản trị viên thêm từ Admin.
-// Dữ liệu Admin chỉ bổ sung, không làm mất các bài mẫu đang có.
+// Đọc danh sách chương/bài quản trị đã lưu.
 const readCourseData = () => {
   const merged = JSON.parse(JSON.stringify(defaultCourseData));
   try {
@@ -1330,8 +1311,8 @@ const LibraryTab = ({ startSignal = 0, examTitle = 'PROKARYOTIC CELL STRUCTURE',
   const [theoryPreview, setTheoryPreview] = useState(null);
   const [activeLibrarySection, setActiveLibrarySection] = useState('theory');
   const [selectedLibraryGrade, setSelectedLibraryGrade] = useState(selectedPath?.grade || '10');
-  const [selectedLibraryChapter, setSelectedLibraryChapter] = useState(selectedPath?.chapterId || courseData['10'][0].id);
-  const [selectedLibraryLesson, setSelectedLibraryLesson] = useState(selectedPath?.lesson || courseData['10'][0].lessons[0]);
+  const [selectedLibraryChapter, setSelectedLibraryChapter] = useState(selectedPath?.chapterId || courseData['10']?.[0]?.id || null);
+  const [selectedLibraryLesson, setSelectedLibraryLesson] = useState(selectedPath?.lesson || courseData['10']?.[0]?.lessons?.[0] || '');
   const [currentExamTitle, setCurrentExamTitle] = useState(examTitle);
   const [uploadedTheoryFiles, setUploadedTheoryFiles] = useState(() => { try { return JSON.parse(localStorage.getItem('bioedu_theory_files') || '[]'); } catch { return []; } });
   useEffect(() => {
@@ -2364,7 +2345,7 @@ function App() {
   const [siteContent, setSiteContent] = useSiteContent();
   const [, setCourseRevision] = useState(0);
   const [selectedHomeGrade, setSelectedHomeGrade] = useState('10');
-  const [selectedHomeLesson, setSelectedHomeLesson] = useState(courseData['10'][0].lessons[0]);
+  const [selectedHomeLesson, setSelectedHomeLesson] = useState(courseData['10']?.[0]?.lessons?.[0] || '');
   const [showBioFact, setShowBioFact] = useState(false);
   const plantTodayKey = new Date().toLocaleDateString('en-CA');
   const [plantWatered, setPlantWatered] = useState(() => localStorage.getItem('bioedu_plant_watered') === plantTodayKey);
