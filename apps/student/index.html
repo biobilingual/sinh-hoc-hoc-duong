@@ -1020,44 +1020,7 @@ const MaterialsTab = ({ selectedPath, onPathChange }) => {
     { id: 'mindmap', icon: '🧠', label: 'Sơ đồ tư duy / Mind map', desc: 'Tổng hợp kiến thức / Knowledge map' }
   ];
 
-  const worksheetItems = [
-    {
-      id: 1,
-      title: 'Phiếu học tập số 1: Các nguyên tố hóa học',
-      subtitle: 'Ôn tập kiến thức nền tảng về nguyên tố đa lượng, vi lượng và vai trò của nước.',
-      updated: '15/09/2026',
-      size: '2.4 MB',
-      badge: 'Cơ bản',
-      grade: '10',
-      chapterId: 101,
-      lesson: 'Bài 1: Các nguyên tố hóa học và nước',
-      color: 'from-blue-500 to-indigo-600'
-    },
-    {
-      id: 2,
-      title: 'Phiếu học tập số 2: Cấu trúc tế bào',
-      subtitle: 'Nhận biết các thành phần chính của tế bào và chức năng của từng bào quan.',
-      updated: '12/09/2026',
-      size: '3.1 MB',
-      badge: 'Trọng tâm',
-      grade: '11',
-      chapterId: 111,
-      lesson: 'Bài 1: Trao đổi nước ở thực vật',
-      color: 'from-emerald-500 to-teal-600'
-    },
-    {
-      id: 3,
-      title: 'Phiếu học tập số 3: Vận chuyển qua màng',
-      subtitle: 'Luyện tập thẩm thấu, khuếch tán và vận chuyển chủ động bằng câu hỏi ứng dụng.',
-      updated: '10/09/2026',
-      size: '2.8 MB',
-      badge: 'Luyện tập',
-      grade: '12',
-      chapterId: 121,
-      lesson: 'Bài 1: Cơ chế di truyền và biến dị',
-      color: 'from-amber-400 to-orange-500'
-    }
-  ];
+  const worksheetItems = []; // Phiếu chỉ đến từ trang Admin.
 
   const videoLessons = [
     { id: 1, title: 'Cấu trúc tế bào', duration: '12:35', level: 'Sinh học 10', grade: '10', chapterId: 102, lesson: 'Bài 3: Cấu trúc tế bào' },
@@ -1083,11 +1046,11 @@ const MaterialsTab = ({ selectedPath, onPathChange }) => {
   const materialSelectionLabel = selectedMaterialLesson ? `Lớp ${selectedMaterialGrade} • ${activeMaterialChapter?.title || ''} • ${selectedMaterialLesson}` : `Lớp ${selectedMaterialGrade} • Hãy chọn chương và bài học`;
 
   const uploadedWorksheetItems = uploadedMaterials.filter(item => item.type === 'worksheet').map(item => ({ ...item, subtitle: item.description || 'Phiếu học tập được giáo viên tải lên.', updated: item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('vi-VN') : 'Mới cập nhật', size: item.worksheetUrl ? 'Phiếu HTML tương tác' : (item.size ? `${Math.max(1, Math.round(item.size / 1024))} KB` : 'Tệp học liệu'), badge: 'Mới', color: 'from-emerald-500 to-teal-600' }));
-  const filteredWorksheetItems = [...worksheetItems, ...uploadedWorksheetItems].filter(item => assignmentIsAvailable(item,assignmentNow) && String(item.grade) === String(selectedMaterialGrade) && (!item.lesson || item.lesson === selectedMaterialLesson));
+  const filteredWorksheetItems = uploadedWorksheetItems.filter(item => assignmentIsAvailable(item,assignmentNow) && String(item.grade) === String(selectedMaterialGrade) && (!item.lesson || item.lesson === selectedMaterialLesson));
   const isWorksheetLessonSelected = Boolean(selectedMaterialLesson);
-  const allWorksheetItems = [...worksheetItems, ...uploadedWorksheetItems].filter(item => assignmentIsAvailable(item,assignmentNow));
-  const visibleWorksheetItems = isWorksheetLessonSelected ? filteredWorksheetItems : allWorksheetItems;
-  const isShowingAllWorksheets = !isWorksheetLessonSelected;
+  const allWorksheetItems = uploadedWorksheetItems.filter(item => assignmentIsAvailable(item,assignmentNow));
+  const visibleWorksheetItems = isWorksheetLessonSelected ? filteredWorksheetItems : [];
+  const isShowingAllWorksheets = false;
   const uploadedVideoLessons = uploadedMaterials.filter(item => item.type === 'video').map(item => ({ ...item, duration: 'Video mới', level: `Sinh học ${item.grade}` }));
   const filteredVideoLessons = [...videoLessons, ...uploadedVideoLessons].filter(item => item.grade === selectedMaterialGrade && (!item.chapterId || item.chapterId === selectedMaterialChapter) && (!item.lesson || item.lesson === selectedMaterialLesson));
 
