@@ -12,7 +12,7 @@
 <style>@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"); html{font-size:90%} body{margin:0;background:#edf6ff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif} .hide-scrollbar::-webkit-scrollbar{display:none} .hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none} .line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden} .text-slate-400,.text-slate-500,.text-gray-400,.text-gray-500,.text-blue-100,.text-blue-50\/95,[class*=" text-slate-400"],[class*=" text-slate-500"],[class*=" text-gray-400"],[class*=" text-gray-500"]{font-family:"Be Vietnam Pro",Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:500;letter-spacing:.005em} .text-slate-400,.text-gray-400{font-weight:400} .muted-reading{font-family:"Be Vietnam Pro",Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:500;letter-spacing:.005em}</style>
 <script>
 (function(){
-  const api='https://biobilingual-content-api.helenlopezj669.chatgpt.site/api/state';
+  const api='https://rglsppkyxubpmbebdobe.supabase.co/functions/v1/biobilingual-api/api/state';
   const keys=['bioedu_site_content','bioedu_media_library','bioedu_mindmap','bioedu_theory_files','bioedu_entertainment','bioedu_vocab_bank','bioedu_materials_library','bioedu_exam_bank','bioedu_exams','bioedu_course_structure'];
   const nativeSet=Storage.prototype.setItem;
   const nativeGet=Storage.prototype.getItem;
@@ -47,7 +47,7 @@ body, #root > div, #root main { background: linear-gradient(160deg, #fffdf0 0%, 
 <body><div id="root"></div>
 <script type="text/babel">
 const {useState,useEffect,useRef}=React;
-const BIO_SHARED_API = 'https://biobilingual-content-api.helenlopezj669.chatgpt.site';
+const BIO_SHARED_API = 'https://rglsppkyxubpmbebdobe.supabase.co/functions/v1/biobilingual-api';
 const BIO_GOOGLE_CLIENT_ID = '519568222612-mvds8a054h1hn49ej5guk1hk9piv0arb.apps.googleusercontent.com';
 const BIO_CLASS_SUBJECTS = ['Toán 1','Toán 2','Hóa','Sinh','Văn 1','Văn 2','Sử','Địa'];
 const readGoogleAuth = () => {
