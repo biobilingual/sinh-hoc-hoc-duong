@@ -120,7 +120,7 @@ const vocabInfo = word => { const base = vocabPresentation[word.term] || { en: w
 const vocabImage = 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=900&q=80';
 
 // --- DỮ LIỆU LỘ TRÌNH MẪU (Cho Trang chủ) ---
-const courseData = {
+const defaultCourseData = {
   "10": [
     { id: 101, title: "Chương 1: Thành phần hóa học của tế bào", vocabCount: 15, difficulty: 1, lessons: ["Bài 1: Các nguyên tố hóa học và nước", "Bài 2: Carbonhydrate và Lipid"] },
     { id: 102, title: "Chương 2: Cấu trúc tế bào", vocabCount: 28, difficulty: 2, lessons: ["Bài 3: Cấu trúc tế bào", "Bài 4: Vận chuyển các chất qua màng"] },
@@ -139,6 +139,30 @@ const courseData = {
     { id: 123, title: "Chương 3: Sinh thái học", vocabCount: 45, difficulty: 3, lessons: ["Bài 6: Quần thể sinh vật", "Bài 7: Quần xã sinh vật", "Bài 8: Hệ sinh thái"] }
   ]
 };
+
+// Gộp cấu trúc mẫu với chương và bài do quản trị viên thêm từ Admin.
+// Dữ liệu Admin chỉ bổ sung, không làm mất các bài mẫu đang có.
+const readCourseData = () => {
+  const merged = JSON.parse(JSON.stringify(defaultCourseData));
+  try {
+    const saved = JSON.parse(localStorage.getItem('bioedu_course_structure') || '[]');
+    if (!Array.isArray(saved)) return merged;
+    saved.forEach((item) => {
+      const grade = String(item.grade || '');
+      const chapterTitle = String(item.chapter || '').trim();
+      const lesson = String(item.lesson || '').trim();
+      if (!merged[grade] || !chapterTitle || !lesson) return;
+      let chapter = merged[grade].find((row) => row.title === chapterTitle);
+      if (!chapter) {
+        chapter = { id: `admin-${item.id || Date.now()}`, title: chapterTitle, vocabCount: 0, difficulty: 1, lessons: [] };
+        merged[grade].push(chapter);
+      }
+      if (!chapter.lessons.includes(lesson)) chapter.lessons.push(lesson);
+    });
+  } catch (_) {}
+  return merged;
+};
+let courseData = readCourseData();
 
 const findLessonContext = (lessonName) => {
   for (const [grade, chapters] of Object.entries(courseData)) {
@@ -2338,12 +2362,27 @@ function App() {
   const [profileDraft, setProfileDraft] = useState(() => readStudentProfile() || emptyStudentProfile);
   const [profileOpen, setProfileOpen] = useState(false);
   const [siteContent, setSiteContent] = useSiteContent();
+  const [, setCourseRevision] = useState(0);
   const [selectedHomeGrade, setSelectedHomeGrade] = useState('10');
   const [selectedHomeLesson, setSelectedHomeLesson] = useState(courseData['10'][0].lessons[0]);
   const [showBioFact, setShowBioFact] = useState(false);
   const plantTodayKey = new Date().toLocaleDateString('en-CA');
   const [plantWatered, setPlantWatered] = useState(() => localStorage.getItem('bioedu_plant_watered') === plantTodayKey);
   const [plantAge, setPlantAge] = useState(() => Math.max(7, Number(localStorage.getItem('bioedu_plant_age')) || 7));
+  useEffect(() => {
+    const refreshCourse = (event) => {
+      if (event?.key && event.key !== 'bioedu_course_structure') return;
+      courseData = readCourseData();
+      setCourseRevision((value) => value + 1);
+    };
+    window.addEventListener('storage', refreshCourse);
+    window.addEventListener('bioedu-shared-update', refreshCourse);
+    refreshCourse();
+    return () => {
+      window.removeEventListener('storage', refreshCourse);
+      window.removeEventListener('bioedu-shared-update', refreshCourse);
+    };
+  }, []);
   useEffect(() => {
     const storedAuth = readGoogleAuth();
     if (!storedAuth) {
@@ -2611,7 +2650,7 @@ function App() {
     <div className="flex h-screen bg-[#eef6ff] font-sans text-gray-900 overflow-hidden">
       
       {/* SIDEBAR */}
-      <div className={`bg-white border-r border-slate-200 flex flex-col justify-between transition-all duration-300 z-20 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+      <div className={`hidden md:flex bg-white border-r border-slate-200 flex-col justify-between transition-all duration-300 z-20 ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
         <div>
           <div className="h-20 flex items-center justify-center border-b border-slate-100 shrink-0 cursor-pointer" onClick={() => navigateToTab('home')}>
             <BioLogo />
@@ -2675,10 +2714,10 @@ function App() {
       </div>
 
       {/* NỘI DUNG CHÍNH */}
-      <main ref={mainRef} className="flex-1 overflow-y-auto relative bg-[#eef6ff]">
-        <div className="h-20 px-5 md:px-10 flex items-center justify-between border-b border-blue-100 bg-white/85 backdrop-blur-sm sticky top-0 z-10">
+      <main ref={mainRef} className="flex-1 overflow-y-auto relative bg-[#eef6ff] pb-20 md:pb-0">
+        <div className="h-16 md:h-20 px-4 md:px-10 flex items-center justify-between border-b border-blue-100 bg-white/85 backdrop-blur-sm sticky top-0 z-10">
           <div>{activeTab !== 'home' && <button onClick={() => window.dispatchEvent(new Event('bioedu-local-back'))} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-700"><span aria-hidden="true" className="text-lg leading-none">←</span> Quay lại / Back</button>}</div>
-          <div className="flex items-center gap-4"><button className="text-sm font-semibold text-slate-500 hover:text-slate-900">Trợ giúp / Help</button><span className="w-8 h-8 rounded-full border border-slate-200 bg-white text-slate-500 flex items-center justify-center text-sm">?</span></div>
+          <div className="flex items-center gap-2 md:gap-4"><button className="hidden sm:block text-sm font-semibold text-slate-500 hover:text-slate-900">Trợ giúp / Help</button><span className="w-8 h-8 rounded-full border border-slate-200 bg-white text-slate-500 flex items-center justify-center text-sm">?</span></div>
         </div>
         
         {/* Header Tabs */}
@@ -2707,6 +2746,21 @@ function App() {
           Hỏi Biola / Ask Biola
         </button>
       </main>
+
+      {/* THANH ĐIỀU HƯỚNG ĐIỆN THOẠI */}
+      <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white/95 px-1 pt-1.5 pb-[max(.4rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,23,42,.10)] backdrop-blur">
+        {[
+          { id: 'home', icon: 'home', label: 'Trang chủ' },
+          { id: 'vocab', icon: 'vocab', label: 'Từ vựng' },
+          { id: 'materials', icon: 'materials', label: 'Học liệu' },
+          { id: 'entertainment', icon: 'music', label: 'Giải trí' },
+          { id: 'library', icon: 'exam', label: 'Luyện tập' },
+          { id: 'ranking', icon: 'ranking', label: 'Xếp hạng' },
+        ].map(item => <button key={item.id} onClick={() => navigateToTab(item.id)} className={`flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-extrabold leading-tight ${activeTab === item.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500'}`}>
+          <span className="flex h-5 items-center justify-center"><NavIcon name={item.icon} active={activeTab === item.id} /></span>
+          <span className="max-w-full truncate">{item.label}</span>
+        </button>)}
+      </nav>
 
       {(authChecking || !googleAuth) && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto bg-gradient-to-br from-blue-950/80 via-slate-900/75 to-emerald-950/75 p-4 backdrop-blur-md">
