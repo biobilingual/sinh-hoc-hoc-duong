@@ -12,7 +12,7 @@
   </style>
 <script>
 (function(){
-  const api='https://biobilingual-content-api.helenlopezj669.chatgpt.site/api/state';
+  const api='https://rglsppkyxubpmbebdobe.supabase.co/functions/v1/biobilingual-api/api/state';
   const keys=['bioedu_site_content','bioedu_media_library','bioedu_mindmap','bioedu_theory_files','bioedu_entertainment','bioedu_vocab_bank','bioedu_materials_library','bioedu_exam_bank','bioedu_exams','bioedu_students','bioedu_course_structure','bioedu_results'];
   const nativeSet=Storage.prototype.setItem;
   const emit=(key,value)=>{ try{ window.dispatchEvent(new StorageEvent('storage',{key,newValue:value,storageArea:localStorage,url:location.href})); } catch(e){ window.dispatchEvent(new Event('bioedu-shared-update')); } };
