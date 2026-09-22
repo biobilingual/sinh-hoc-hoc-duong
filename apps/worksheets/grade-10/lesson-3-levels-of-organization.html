@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Levels of Organization of the Living World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4; /* Light green background */
+        }
+        
+        /* Custom Colors based on requirements */
+        .color-yellow { background-color: #facc15; }
+        .color-dark-blue { background-color: #1e3a8a; }
+        .color-deep-pink { background-color: #be185d; }
+        .text-dark-blue { color: #1e3a8a; }
+        .text-deep-pink { color: #be185d; }
+        .border-dark-blue { border-color: #1e3a8a; }
+        .border-deep-pink { border-color: #be185d; }
+        .border-yellow { border-color: #facc15; }
+
+        /* Status Borders for completely correct/incorrect (100% strict rule) */
+        .status-correct { border: 4px solid #22c55e !important; } /* Green */
+        .status-incorrect { border: 4px solid #ef4444 !important; } /* Red */
+
+        /* Subtle Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Drag and Drop / Touch Select Styles */
+        .draggable-item {
+            cursor: grab;
+            transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s, border-color 0.2s;
+            touch-action: manipulation; /* Improves touch behavior */
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+        .draggable-item.selected-for-move {
+            background-color: #fef08a; /* yellow-200 */
+            border-color: #eab308; /* yellow-500 */
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .drag-zone {
+            min-height: 60px;
+            transition: background-color 0.2s;
+        }
+        .drag-zone.drag-over, .drag-zone.highlight-target {
+            background-color: #fef08a; 
+            border-style: dashed;
+        }
+
+        /* Matching Styles */
+        .matching-item {
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        .matching-item.selected {
+            background-color: #bfdbfe; /* blue-200 */
+            border-color: #3b82f6; /* blue-500 */
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+        .matching-item.matched {
+            opacity: 0.7;
+            cursor: default;
+        }
+        /* Match lines for desktop */
+        .match-line {
+            position: absolute;
+            background-color: #1e3a8a; 
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+        #matching-container {
+            position: relative;
+        }
+
+        /* Radio & Checkbox styling */
+        .custom-radio {
+            accent-color: #1e3a8a;
+        }
+
+        /* Utility */
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen pb-12 relative">
+
+    <header class="color-dark-blue text-white py-6 shadow-md mb-8 sticky top-0 z-40">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">LEVELS OF ORGANIZATION OF THE LIVING WORLD</h1>
+                <p class="text-yellow-300 font-medium mt-1">Biology - Grade 10</p>
+            </div>
+            <div id="timer-display" class="hidden bg-white text-dark-blue font-bold text-xl px-4 py-2 rounded-full shadow-inner flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="time-left">15:00</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="student-info-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in border-t-8 border-deep-pink">
+            <h2 class="text-2xl font-bold text-dark-blue mb-2">Welcome to the Worksheet!</h2>
+            <p class="text-gray-600 mb-6 text-sm font-medium">Time limit: 15 minutes &bull; Total score: 10 points</p>
+            
+            <div class="space-y-5">
+                <div>
+                    <label for="student-name" class="block text-sm font-semibold text-gray-700 mb-1">FULL NAME <span class="text-red-500">*</span></label>
+                    <input type="text" id="student-name" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-dark-blue focus:border-dark-blue outline-none transition-all placeholder-gray-400" placeholder="Enter your full name">
+                </div>
+                <div>
+                    <label for="student-class" class="block text-sm font-semibold text-gray-700 mb-1">CLASS <span class="text-red-500">*</span></label>
+                    <input type="text" id="student-class" required class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-dark-blue focus:border-dark-blue outline-none transition-all placeholder-gray-400" placeholder="Enter your class">
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button id="start-btn" disabled class="w-full color-yellow text-dark-blue font-bold text-lg py-3 px-6 rounded-xl shadow hover:shadow-lg transform transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
+                    START THE WORKSHEET
+                </button>
+            </div>
+            
+            <div class="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <h3 class="font-bold text-dark-blue text-sm mb-1 flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Student Instructions
+                </h3>
+                <p class="text-xs text-gray-700 leading-relaxed font-medium">
+                    Read each question carefully and complete the tasks in order. For the drag-and-drop and matching questions, select the correct corresponding components. For the situational question, answer briefly based on your knowledge of the levels of organization of the living world.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="custom-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center border-t-8 border-deep-pink fade-in">
+            <h3 id="modal-title" class="text-2xl font-bold text-dark-blue mb-3">Alert</h3>
+            <p id="modal-msg" class="text-gray-600 mb-6 font-medium">Message goes here.</p>
+            <div class="flex justify-center gap-4">
+                <button id="modal-cancel-btn" class="hidden bg-gray-200 text-gray-800 font-bold py-3 px-6 rounded-xl hover:bg-gray-300 transition shadow">Cancel</button>
+                <button id="modal-confirm-btn" class="color-dark-blue text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-800 transition shadow">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <main id="worksheet-content" class="container mx-auto px-4 max-w-4xl hidden">
+        
+        <div id="q1-container" class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-8 border-2 border-gray-100 transition-colors duration-300 fade-in">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="bg-blue-100 text-dark-blue font-black rounded-lg px-3 py-1 mt-1 border border-blue-200">Q1</div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">DRAG AND DROP — 2.0 points</h2>
+                    <p class="text-gray-600 mt-1 font-medium">Arrange the levels of organization of the living world in order from the smallest level to the largest level.</p>
+                    <p class="text-sm text-gray-500 mt-2 italic flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg>
+                        Drag and drop, or tap to select and tap a target to move.
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 rounded-xl p-4 border border-blue-100 mb-6">
+                <h3 class="text-sm font-bold text-dark-blue uppercase tracking-wider mb-3">Available Levels</h3>
+                <div id="q1-source-zone" class="flex flex-wrap gap-2 min-h-[60px] p-2 rounded-lg bg-white/50 border border-blue-200/50">
+                    <!-- Draggable items populated by JS -->
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Correct Order (Smallest to Largest)</h3>
+                <div id="q1-target-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <!-- Drop zones populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <div id="q2-container" class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-8 border-2 border-gray-100 transition-colors duration-300 fade-in">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="bg-blue-100 text-dark-blue font-black rounded-lg px-3 py-1 mt-1 border border-blue-200">Q2</div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">MATCHING — 2.0 points</h2>
+                    <p class="text-gray-600 mt-1 font-medium">Match each level of organization in the left column with the appropriate description in the right column.</p>
+                    <p class="text-sm text-gray-500 mt-2 italic flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                        </svg>
+                        Click an item on the left, then click its match on the right.
+                    </p>
+                </div>
+            </div>
+
+            <div id="matching-container" class="flex flex-col md:flex-row justify-between gap-6 md:gap-16 relative">
+                <!-- SVG layer for lines (Desktop) -->
+                <svg id="matching-lines-svg" class="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style="z-index: 1; overflow: visible;"></svg>
+
+                <!-- Left Column -->
+                <div class="w-full md:w-5/12 flex flex-col gap-3 relative z-10" id="q2-left-col">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Right Column -->
+                <div class="w-full md:w-7/12 flex flex-col gap-3 relative z-10" id="q2-right-col">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <div class="mt-5 flex justify-end relative z-10">
+                <button id="q2-reset-btn" class="text-sm text-red-600 hover:text-red-800 font-bold px-4 py-2 rounded-lg bg-red-50 hover:bg-red-100 transition shadow-sm border border-red-200">Reset Matches</button>
+            </div>
+        </div>
+
+        <div id="q3-container" class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-8 border-2 border-gray-100 transition-colors duration-300 fade-in">
+            <div class="flex items-start gap-4 mb-4">
+                <div class="bg-blue-100 text-dark-blue font-black rounded-lg px-3 py-1 mt-1 border border-blue-200">Q3</div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">MULTIPLE CHOICE — 2.0 points</h2>
+                </div>
+            </div>
+            
+            <div class="ml-0 md:ml-14">
+                <p class="text-lg text-gray-800 font-semibold mb-5">Which of the following levels does NOT belong to the intermediate levels of organization of the living world?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="q3-options">
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition group">
+                        <input type="radio" name="q3" value="A" class="custom-radio w-5 h-5 mr-4">
+                        <span class="font-bold mr-2 text-dark-blue">A.</span> <span class="text-gray-700 font-medium text-lg">Tissue</span>
+                    </label>
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition group">
+                        <input type="radio" name="q3" value="B" class="custom-radio w-5 h-5 mr-4">
+                        <span class="font-bold mr-2 text-dark-blue">B.</span> <span class="text-gray-700 font-medium text-lg">Cell</span>
+                    </label>
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition group">
+                        <input type="radio" name="q3" value="C" class="custom-radio w-5 h-5 mr-4">
+                        <span class="font-bold mr-2 text-dark-blue">C.</span> <span class="text-gray-700 font-medium text-lg">Organ</span>
+                    </label>
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition group">
+                        <input type="radio" name="q3" value="D" class="custom-radio w-5 h-5 mr-4">
+                        <span class="font-bold mr-2 text-dark-blue">D.</span> <span class="text-gray-700 font-medium text-lg">Organ system</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="q4-container" class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-8 border-2 border-gray-100 transition-colors duration-300 fade-in">
+            <div class="flex items-start gap-4 mb-6">
+                <div class="bg-blue-100 text-dark-blue font-black rounded-lg px-3 py-1 mt-1 border border-blue-200">Q4</div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">TRUE / FALSE — 2.0 points</h2>
+                    <p class="text-gray-600 mt-1 font-medium">Select True or False for each statement.</p>
+                </div>
+            </div>
+
+            <div class="space-y-4 ml-0 md:ml-14" id="q4-statements">
+                <!-- Statement a -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl border-2 border-gray-200 gap-4 transition-colors">
+                    <p class="text-gray-800 font-medium flex-1 text-base leading-relaxed"><span class="font-bold text-dark-blue mr-2">a)</span> A level of living organization is a level that fully exhibits the properties of life.</p>
+                    <div class="flex gap-2 shrink-0">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_a" value="True" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-dark-blue peer-checked:text-white peer-checked:border-dark-blue hover:bg-gray-100 transition font-bold text-sm w-20 text-center">True</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_a" value="False" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-deep-pink peer-checked:text-white peer-checked:border-deep-pink hover:bg-gray-100 transition font-bold text-sm w-20 text-center">False</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Statement b -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl border-2 border-gray-200 gap-4 transition-colors">
+                    <p class="text-gray-800 font-medium flex-1 text-base leading-relaxed"><span class="font-bold text-dark-blue mr-2">b)</span> The largest level of organization of the living world is the ecosystem.</p>
+                    <div class="flex gap-2 shrink-0">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_b" value="True" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-dark-blue peer-checked:text-white peer-checked:border-dark-blue hover:bg-gray-100 transition font-bold text-sm w-20 text-center">True</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_b" value="False" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-deep-pink peer-checked:text-white peer-checked:border-deep-pink hover:bg-gray-100 transition font-bold text-sm w-20 text-center">False</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Statement c -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl border-2 border-gray-200 gap-4 transition-colors">
+                    <p class="text-gray-800 font-medium flex-1 text-base leading-relaxed"><span class="font-bold text-dark-blue mr-2">c)</span> The levels of organization of the living world are closely related to one another.</p>
+                    <div class="flex gap-2 shrink-0">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_c" value="True" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-dark-blue peer-checked:text-white peer-checked:border-dark-blue hover:bg-gray-100 transition font-bold text-sm w-20 text-center">True</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_c" value="False" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-deep-pink peer-checked:text-white peer-checked:border-deep-pink hover:bg-gray-100 transition font-bold text-sm w-20 text-center">False</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Statement d -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl border-2 border-gray-200 gap-4 transition-colors">
+                    <p class="text-gray-800 font-medium flex-1 text-base leading-relaxed"><span class="font-bold text-dark-blue mr-2">d)</span> The basic levels of organization of the living world include cell, tissue, population.</p>
+                    <div class="flex gap-2 shrink-0">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_d" value="True" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-dark-blue peer-checked:text-white peer-checked:border-dark-blue hover:bg-gray-100 transition font-bold text-sm w-20 text-center">True</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="q4_d" value="False" class="peer sr-only">
+                            <div class="px-5 py-2.5 rounded-lg border-2 border-gray-300 peer-checked:bg-deep-pink peer-checked:text-white peer-checked:border-deep-pink hover:bg-gray-100 transition font-bold text-sm w-20 text-center">False</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="q5-container" class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-8 border-2 border-gray-100 transition-colors duration-300 fade-in">
+            <div class="flex items-start gap-4 mb-4">
+                <div class="bg-blue-100 text-dark-blue font-black rounded-lg px-3 py-1 mt-1 border border-blue-200">Q5</div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">SITUATIONAL QUESTION — 2.0 points</h2>
+                </div>
+            </div>
+            
+            <div class="ml-0 md:ml-14">
+                <div class="bg-yellow-50 p-5 rounded-xl border border-yellow-200 mb-5 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1.5 h-full color-yellow"></div>
+                    <h3 class="font-bold text-yellow-800 mb-2">Situation:</h3>
+                    <p class="text-gray-900 font-medium italic text-lg">"A student argues that a fish pond is not an ecosystem."</p>
+                </div>
+                
+                <p class="text-lg text-gray-800 font-bold mb-2">Question: Do you agree with the above opinion? Explain.</p>
+                <p class="text-sm text-gray-500 mb-4 flex items-center gap-1 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Hint: Pay attention to all living organisms and their environment.
+                </p>
+
+                <textarea id="q5-answer" rows="4" class="w-full p-4 rounded-xl border-2 border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-dark-blue outline-none transition-all resize-none text-base placeholder-gray-400" placeholder="Type your answer here..."></textarea>
+            </div>
+        </div>
+
+        <div class="text-center mt-10 mb-8 fade-in">
+            <button id="grade-btn" class="color-deep-pink text-white font-black text-xl py-4 px-12 rounded-full shadow-lg hover:shadow-xl transform transition hover:-translate-y-1">
+                GRADE THE WORKSHEET
+            </button>
+        </div>
+
+        <div id="results-container" class="hidden bg-white rounded-2xl shadow-2xl p-8 mb-12 border-t-8 border-dark-blue fade-in">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-black text-dark-blue mb-2 tracking-tight">WORKSHEET RESULTS</h2>
+                <div class="inline-flex flex-col sm:flex-row bg-gray-50 border border-gray-200 rounded-xl px-6 py-4 mt-4 gap-4 sm:gap-8 justify-center shadow-sm">
+                    <p class="text-gray-500 uppercase text-xs font-bold tracking-wider">Student<br><span id="res-name" class="font-black text-gray-900 text-lg sm:text-xl normal-case"></span></p>
+                    <div class="hidden sm:block w-px bg-gray-300"></div>
+                    <p class="text-gray-500 uppercase text-xs font-bold tracking-wider">Class<br><span id="res-class" class="font-black text-gray-900 text-lg sm:text-xl normal-case"></span></p>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-16 mb-10">
+                <div class="text-center">
+                    <p class="text-gray-500 font-bold uppercase tracking-widest mb-3">Total Score</p>
+                    <div class="w-36 h-36 rounded-full border-8 border-yellow-400 flex items-center justify-center mx-auto bg-yellow-50 shadow-inner relative">
+                        <span id="res-score" class="text-5xl font-black text-gray-800"></span><span class="text-2xl text-gray-500 font-bold mt-2">/10</span>
+                    </div>
+                </div>
+                
+                <div class="text-center md:text-left space-y-4 w-full md:w-auto max-w-sm">
+                    <div class="bg-green-50 px-5 py-4 rounded-xl border border-green-200 flex items-center gap-4 shadow-sm">
+                        <div class="bg-green-100 p-2 rounded-full">
+                            <svg class="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <p class="text-gray-800 font-medium text-lg leading-tight"><span id="res-correct-qs" class="font-black text-green-700 text-2xl"></span> completely correct questions</p>
+                    </div>
+                    <div class="bg-blue-50 px-5 py-4 rounded-xl border border-blue-200 shadow-sm text-center">
+                        <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Feedback</p>
+                        <p id="res-feedback" class="font-black text-2xl"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 text-sm text-gray-600 text-center font-medium">
+                <p>Scroll up to review your answers. Completely correct questions are outlined in green, while those containing errors are outlined in red.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- DATA & STATE ---
+        const orderedLevels = [
+            "Atom", "Molecule", "Organelle", "Cell", "Tissue", "Organ", 
+            "Organ system", "Organism", "Population", "Community", "Ecosystem", "Biosphere"
+        ];
+        
+        // Randomize initial array for Q1
+        const shuffledLevels = [...orderedLevels].sort(() => Math.random() - 0.5);
+
+        const matchingLeft = [
+            { id: 'l1', text: "Cell", matchId: 'rB' },
+            { id: 'l2', text: "Tissue", matchId: 'rD' },
+            { id: 'l3', text: "Population", matchId: 'rA' },
+            { id: 'l4', text: "Community", matchId: 'rE' },
+            { id: 'l5', text: "Ecosystem", matchId: 'rC' }
+        ];
+
+        const matchingRight = [
+            { id: 'rA', text: "A. Individuals of the same species, living together in one area." },
+            { id: 'rB', text: "B. The basic structural unit of all organisms." },
+            { id: 'rC', text: "C. A system consisting of a community and the environment." },
+            { id: 'rD', text: "D. Similar cells, performing the same function together." },
+            { id: 'rE', text: "E. Populations of different species, living together in one area." }
+        ];
+
+        // Core State Variables
+        let q1Answers = new Array(12).fill(null); 
+        let q2Matches = []; // array of { left: id, right: id }
+        let selectedMatchItem = null; 
+        
+        let timerInterval;
+        let timeLeft = 15 * 60; // 15 minutes
+        let isGraded = false;
+        let selectedDragItem = null; // Touch drag state
+
+        // DOM Elements
+        const modal = document.getElementById('student-info-modal');
+        const nameInput = document.getElementById('student-name');
+        const classInput = document.getElementById('student-class');
+        const startBtn = document.getElementById('start-btn');
+        const worksheetContent = document.getElementById('worksheet-content');
+        const timerDisplay = document.getElementById('timer-display');
+        const timeLeftSpan = document.getElementById('time-left');
+        const gradeBtn = document.getElementById('grade-btn');
+        
+        // Custom Modal elements
+        const customModal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMsg = document.getElementById('modal-msg');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+        let modalConfirmCallback = null;
+        function showModal(title, message, isConfirm = false, callback = null) {
+            modalTitle.textContent = title;
+            modalMsg.textContent = message;
+            modalConfirmCallback = callback;
+            
+            if (isConfirm) {
+                modalCancelBtn.classList.remove('hidden');
+                modalConfirmBtn.textContent = 'Yes';
+            } else {
+                modalCancelBtn.classList.add('hidden');
+                modalConfirmBtn.textContent = 'OK';
+            }
+            customModal.classList.remove('hidden');
+        }
+
+        modalConfirmBtn.addEventListener('click', () => {
+            customModal.classList.add('hidden');
+            if (modalConfirmCallback) modalConfirmCallback(true);
+        });
+        
+        modalCancelBtn.addEventListener('click', () => {
+            customModal.classList.add('hidden');
+            if (modalConfirmCallback) modalConfirmCallback(false);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            validateInputs();
+            nameInput.addEventListener('input', validateInputs);
+            classInput.addEventListener('input', validateInputs);
+            
+            startBtn.addEventListener('click', startWorksheet);
+            gradeBtn.addEventListener('click', () => {
+                showModal("Confirm Grading", "Are you sure you want to grade your worksheet now?", true, (confirmed) => {
+                    if(confirmed) gradeWorksheet();
+                });
+            });
+            
+            initQ1();
+            initQ2();
+        });
+
+        function validateInputs() {
+            if(nameInput.value.trim() !== '' && classInput.value.trim() !== '') {
+                startBtn.removeAttribute('disabled');
+            } else {
+                startBtn.setAttribute('disabled', 'true');
+            }
+        }
+
+        function startWorksheet() {
+            modal.classList.add('hidden');
+            worksheetContent.classList.remove('hidden');
+            timerDisplay.classList.remove('hidden');
+            startTimer();
+            window.scrollTo(0, 0);
+            
+            // Trigger line draw on start just in case (for matching UI)
+            setTimeout(drawMatchingLines, 100);
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showModal("Time's Up!", "The 15-minute time limit has been reached. Your worksheet will now be graded automatically.", false, () => {
+                        gradeWorksheet();
+                        setTimeout(() => document.getElementById('results-container').scrollIntoView({ behavior: 'smooth', block: 'end' }), 300);
+                    });
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timeLeftSpan.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 60 && !isGraded) {
+                timerDisplay.classList.add('text-red-600', 'bg-red-50', 'border', 'border-red-200');
+                timerDisplay.classList.remove('text-dark-blue', 'bg-white');
+                timerDisplay.classList.add('animate-pulse');
+            }
+        }
+
+        function initQ1() {
+            const sourceZone = document.getElementById('q1-source-zone');
+            const targetContainer = document.getElementById('q1-target-container');
+
+            // Render draggable items
+            shuffledLevels.forEach((level, index) => {
+                const el = document.createElement('div');
+                el.className = 'draggable-item bg-white border-2 border-dark-blue text-dark-blue font-bold px-4 py-2.5 rounded-lg shadow-sm no-select text-center text-sm sm:text-base w-auto max-w-[150px]';
+                el.draggable = true;
+                el.textContent = level;
+                el.dataset.level = level;
+                el.id = `drag-${index}`;
+                
+                // Desktop Drag Events
+                el.addEventListener('dragstart', handleDragStart);
+                el.addEventListener('dragend', handleDragEnd);
+                
+                // Touch/Click Events for Accessibility
+                el.addEventListener('click', handleItemClick);
+                
+                sourceZone.appendChild(el);
+            });
+
+            // Render drop zones
+            for (let i = 0; i < 12; i++) {
+                const zone = document.createElement('div');
+                zone.className = 'drag-zone flex flex-col items-center justify-center p-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 relative';
+                zone.dataset.index = i;
+                
+                const label = document.createElement('span');
+                label.className = 'absolute top-1 left-2 text-xs text-gray-400 font-bold';
+                label.textContent = i + 1;
+                zone.appendChild(label);
+
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('click', handleZoneClick);
+                
+                targetContainer.appendChild(zone);
+            }
+
+            // Make source zone accept drops back
+            sourceZone.addEventListener('dragover', handleDragOver);
+            sourceZone.addEventListener('dragleave', handleDragLeave);
+            sourceZone.addEventListener('drop', handleDropSource);
+            sourceZone.addEventListener('click', handleSourceClick);
+            
+            // Background click deselects active tap-item
+            document.addEventListener('click', (e) => {
+                if(selectedDragItem && !e.target.closest('#q1-container')) {
+                    clearSelectionQ1();
+                }
+            });
+        }
+
+        // Native Drag-Drop Logic Q1
+        let draggedItemNative = null;
+
+        function handleDragStart(e) {
+            if (isGraded) { e.preventDefault(); return; }
+            clearSelectionQ1(); // Clear any tap-selection
+            draggedItemNative = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.id);
+            setTimeout(() => this.classList.add('opacity-40'), 0);
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('opacity-40');
+            draggedItemNative = null;
+        }
+
+        function handleDragOver(e) {
+            if (isGraded) return;
+            e.preventDefault();
+            this.classList.add('drag-over');
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragLeave() {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (isGraded) return;
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            const data = e.dataTransfer.getData('text/plain');
+            const draggedElement = document.getElementById(data);
+            
+            if (!draggedElement) return;
+            placeItemInZone(draggedElement, this);
+        }
+
+        function handleDropSource(e) {
+            if (isGraded) return;
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            const data = e.dataTransfer.getData('text/plain');
+            const draggedElement = document.getElementById(data);
+            
+            if (draggedElement) placeItemInSource(draggedElement);
+        }
+
+        // Tap-to-move Logic Q1 (For mobile/touch compatibility)
+        function handleItemClick(e) {
+            e.stopPropagation();
+            if (isGraded) return;
+
+            if (selectedDragItem) {
+                if (selectedDragItem === this) {
+                    clearSelectionQ1();
+                } else if (this.parentElement.classList.contains('drag-zone')) {
+                    const targetZone = this.parentElement;
+                    placeItemInZone(selectedDragItem, targetZone);
+                    clearSelectionQ1();
+                } else {
+                    clearSelectionQ1();
+                    selectItem(this);
+                }
+            } else {
+                selectItem(this);
+            }
+        }
+
+        function selectItem(item) {
+            selectedDragItem = item;
+            item.classList.add('selected-for-move');
+        }
+
+        function clearSelectionQ1() {
+            if(selectedDragItem) {
+                selectedDragItem.classList.remove('selected-for-move');
+                selectedDragItem = null;
+            }
+        }
+
+        function handleZoneClick(e) {
+            if(isGraded || !selectedDragItem) return;
+            if(e.target.closest('.draggable-item')) return; // Handled by item click
+            placeItemInZone(selectedDragItem, this);
+            clearSelectionQ1();
+        }
+
+        function handleSourceClick(e) {
+            if(isGraded || !selectedDragItem) return;
+            if(e.target.closest('.draggable-item')) return; // Handled by item click
+            placeItemInSource(selectedDragItem);
+            clearSelectionQ1();
+        }
+
+        function placeItemInZone(element, zone) {
+            const sourceZoneEl = document.getElementById('q1-source-zone');
+            const targetIndex = zone.dataset.index;
+            
+            const existingItem = zone.querySelector('.draggable-item');
+            if (existingItem && existingItem !== element) {
+                sourceZoneEl.appendChild(existingItem);
+            }
+
+            if (element.parentElement.classList.contains('drag-zone')) {
+                const oldIndex = element.parentElement.dataset.index;
+                q1Answers[oldIndex] = null;
+            }
+
+            zone.appendChild(element);
+            q1Answers[targetIndex] = element.dataset.level;
+        }
+
+        function placeItemInSource(element) {
+            if (element.parentElement.classList.contains('drag-zone')) {
+                const oldIndex = element.parentElement.dataset.index;
+                q1Answers[oldIndex] = null;
+            }
+            document.getElementById('q1-source-zone').appendChild(element);
+        }
+
+        function initQ2() {
+            const leftCol = document.getElementById('q2-left-col');
+            const rightCol = document.getElementById('q2-right-col');
+
+            // Render Left items
+            matchingLeft.forEach((item, index) => {
+                const el = createMatchElement(item, 'left', index + 1);
+                leftCol.appendChild(el);
+            });
+
+            // Render Right items (randomized display)
+            const rightShuffled = [...matchingRight].sort(() => Math.random() - 0.5);
+            rightShuffled.forEach(item => {
+                const el = createMatchElement(item, 'right', '');
+                rightCol.appendChild(el);
+            });
+
+            document.getElementById('q2-reset-btn').addEventListener('click', resetQ2);
+            window.addEventListener('resize', drawMatchingLines);
+        }
+
+        function createMatchElement(item, side, number) {
+            const el = document.createElement('div');
+            el.className = 'matching-item bg-white border-2 border-gray-300 rounded-xl p-4 shadow-sm hover:shadow-md flex items-center min-h-[80px] relative';
+            el.id = `match-${item.id}`;
+            el.dataset.id = item.id;
+            el.dataset.side = side;
+            
+            if (side === 'left') {
+                el.innerHTML = `<span class="font-black text-dark-blue mr-3 min-w-[20px]">${number}.</span> <span class="font-bold text-gray-800 text-lg">${item.text}</span>`;
+            } else {
+                el.innerHTML = `<span class="text-gray-800 text-sm font-medium leading-relaxed">${item.text}</span>`;
+            }
+
+            el.addEventListener('click', () => handleMatchClick(el, item.id, side));
+            return el;
+        }
+
+        function handleMatchClick(el, id, side) {
+            if (isGraded || el.classList.contains('matched')) return;
+
+            if (selectedMatchItem && selectedMatchItem.id === id) {
+                el.classList.remove('selected');
+                selectedMatchItem = null;
+                return;
+            }
+
+            document.querySelectorAll(`.matching-item[data-side="${side}"]`).forEach(node => {
+                node.classList.remove('selected');
+            });
+
+            el.classList.add('selected');
+
+            if (!selectedMatchItem) {
+                selectedMatchItem = { id, side, el };
+            } else {
+                if (selectedMatchItem.side !== side) {
+                    // Match found
+                    const leftId = side === 'left' ? id : selectedMatchItem.id;
+                    const rightId = side === 'right' ? id : selectedMatchItem.id;
+                    const leftEl = side === 'left' ? el : selectedMatchItem.el;
+                    const rightEl = side === 'right' ? el : selectedMatchItem.el;
+
+                    q2Matches.push({ left: leftId, right: rightId });
+                    
+                    [leftEl, rightEl].forEach(element => {
+                        element.classList.remove('selected');
+                        element.classList.add('matched', 'bg-gray-100', 'border-gray-200');
+                    });
+
+                    drawMatchingLines();
+                    
+                    if(window.innerWidth < 768) {
+                        const hint = document.createElement('div');
+                        hint.className = 'text-xs text-blue-700 mt-2 font-bold text-center match-hint bg-blue-100 rounded py-1 px-2 absolute -bottom-3 left-1/2 transform -translate-x-1/2 border border-blue-200 z-20 whitespace-nowrap shadow-sm';
+                        const pairedText = side === 'left' ? rightEl.innerText.substring(0,2) : leftEl.innerText.split('.')[1]?.trim();
+                        hint.textContent = `Matched: ${side==='left'? 'Right' : 'Left'} ${pairedText}`;
+                        leftEl.appendChild(hint);
+                    }
+                    
+                    selectedMatchItem = null;
+                } else {
+                    selectedMatchItem = { id, side, el };
+                }
+            }
+        }
+
+        function drawMatchingLines() {
+            const svg = document.getElementById('matching-lines-svg');
+            svg.innerHTML = '';
+            if(window.innerWidth < 768) return; 
+            
+            const container = document.getElementById('matching-container');
+            const containerRect = container.getBoundingClientRect();
+
+            q2Matches.forEach(match => {
+                const leftEl = document.getElementById(`match-${match.left}`);
+                const rightEl = document.getElementById(`match-${match.right}`);
+                
+                if (leftEl && rightEl) {
+                    const lRect = leftEl.getBoundingClientRect();
+                    const rRect = rightEl.getBoundingClientRect();
+
+                    const x1 = lRect.right - containerRect.left;
+                    const y1 = lRect.top + (lRect.height / 2) - containerRect.top;
+                    const x2 = rRect.left - containerRect.left;
+                    const y2 = rRect.top + (rRect.height / 2) - containerRect.top;
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', '#1e3a8a');
+                    line.setAttribute('stroke-width', '3');
+                    line.setAttribute('stroke-linecap', 'round');
+                    svg.appendChild(line);
+                    
+                    const circle1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle1.setAttribute('cx', x1);
+                    circle1.setAttribute('cy', y1);
+                    circle1.setAttribute('r', '4');
+                    circle1.setAttribute('fill', '#1e3a8a');
+                    svg.appendChild(circle1);
+
+                    const circle2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle2.setAttribute('cx', x2);
+                    circle2.setAttribute('cy', y2);
+                    circle2.setAttribute('r', '4');
+                    circle2.setAttribute('fill', '#1e3a8a');
+                    svg.appendChild(circle2);
+                }
+            });
+        }
+
+        function resetQ2() {
+            if (isGraded) return;
+            q2Matches = [];
+            selectedMatchItem = null;
+            document.querySelectorAll('.matching-item').forEach(el => {
+                el.classList.remove('selected', 'matched', 'bg-gray-100', 'border-gray-200', 'bg-red-50', 'bg-green-50', 'border-red-500', 'border-green-500');
+                const hint = el.querySelector('.match-hint');
+                if(hint) hint.remove();
+            });
+            document.getElementById('matching-lines-svg').innerHTML = '';
+        }
+
+        function gradeWorksheet() {
+            if (isGraded) return;
+            isGraded = true;
+            clearInterval(timerInterval);
+
+            // UI Disable
+            gradeBtn.disabled = true;
+            gradeBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+            gradeBtn.classList.remove('hover:-translate-y-1', 'color-deep-pink', 'hover:shadow-xl');
+            gradeBtn.textContent = 'WORKSHEET GRADED';
+            
+            document.querySelectorAll('input[type="radio"]').forEach(el => el.disabled = true);
+            document.getElementById('q5-answer').readOnly = true;
+            document.getElementById('q2-reset-btn').style.display = 'none';
+
+            let totalScore = 0;
+            let completelyCorrectQs = 0;
+
+            // --- Q1 Grading ---
+            let q1Score = 0;
+            let q1AllCorrect = true;
+            for (let i = 0; i < orderedLevels.length; i++) {
+                const itemDiv = document.querySelector(`.drag-zone[data-index="${i}"]`);
+                const elInside = itemDiv.querySelector('.draggable-item');
+                
+                if (q1Answers[i] === orderedLevels[i]) {
+                    q1Score += (2.0 / 12);
+                    if(elInside) elInside.classList.add('bg-green-50', 'border-green-500', 'text-green-800');
+                } else {
+                    q1AllCorrect = false;
+                    if(elInside) elInside.classList.add('bg-red-50', 'border-red-500', 'text-red-800');
+                }
+            }
+            totalScore += q1Score;
+            // Border logic: GREEN only if 100% correct AND all answered
+            updateContainerStatus('q1-container', q1AllCorrect && q1Answers.every(a => a !== null));
+            if(q1AllCorrect && q1Answers.every(a => a !== null)) completelyCorrectQs++;
+
+
+            // --- Q2 Grading ---
+            let q2Score = 0;
+            let q2AllCorrect = q2Matches.length === 5; 
+            
+            q2Matches.forEach(match => {
+                const leftItem = matchingLeft.find(l => l.id === match.left);
+                const leftEl = document.getElementById(`match-${match.left}`);
+                const rightEl = document.getElementById(`match-${match.right}`);
+                
+                if (leftItem && leftItem.matchId === match.right) {
+                    q2Score += (2.0 / 5);
+                    leftEl.classList.add('border-green-500', 'bg-green-50', 'text-green-900');
+                    rightEl.classList.add('border-green-500', 'bg-green-50', 'text-green-900');
+                } else {
+                    q2AllCorrect = false;
+                    leftEl.classList.add('border-red-500', 'bg-red-50', 'text-red-900');
+                    rightEl.classList.add('border-red-500', 'bg-red-50', 'text-red-900');
+                }
+            });
+            totalScore += q2Score;
+            updateContainerStatus('q2-container', q2AllCorrect);
+            if(q2AllCorrect) completelyCorrectQs++;
+
+
+            // --- Q3 Grading ---
+            const q3Selected = document.querySelector('input[name="q3"]:checked');
+            let q3AllCorrect = false;
+            if (q3Selected) {
+                if (q3Selected.value === 'B') {
+                    totalScore += 2.0;
+                    q3AllCorrect = true;
+                    q3Selected.parentElement.classList.add('bg-green-50', 'border-green-500');
+                } else {
+                    q3Selected.parentElement.classList.add('bg-red-50', 'border-red-500');
+                    document.querySelector('input[name="q3"][value="B"]').parentElement.classList.add('border-green-500', 'border-2', 'bg-green-50/50');
+                }
+            } else {
+                document.querySelector('input[name="q3"][value="B"]').parentElement.classList.add('border-green-500', 'border-2');
+            }
+            updateContainerStatus('q3-container', q3AllCorrect);
+            if(q3AllCorrect) completelyCorrectQs++;
+
+
+            // --- Q4 Grading ---
+            const q4Answers = { 'q4_a': 'True', 'q4_b': 'False', 'q4_c': 'True', 'q4_d': 'False' };
+            let q4Score = 0;
+            let q4AllCorrect = true;
+            
+            for (const [key, correctVal] of Object.entries(q4Answers)) {
+                const selected = document.querySelector(`input[name="${key}"]:checked`);
+                const container = document.querySelector(`input[name="${key}"]`).closest('.flex-col, .sm\\:flex-row');
+                
+                if (selected) {
+                    if (selected.value === correctVal) {
+                        q4Score += (2.0 / 4);
+                        container.classList.add('bg-green-50', 'border-green-200');
+                    } else {
+                        q4AllCorrect = false;
+                        container.classList.add('bg-red-50', 'border-red-200');
+                    }
+                } else {
+                    q4AllCorrect = false;
+                    container.classList.add('border-red-300', 'border-2');
+                }
+            }
+            totalScore += q4Score;
+            updateContainerStatus('q4-container', q4AllCorrect);
+            if(q4AllCorrect) completelyCorrectQs++;
+
+
+            // --- Q5 Grading (Automated Keyword Logic) ---
+            const rawAns = document.getElementById('q5-answer').value;
+            const ans = rawAns.toLowerCase();
+            let q5Score = 0;
+            let q5AllCorrect = false;
+            
+            // Explicitly checking for "disagree" or "ecosystem" as per modified criteria
+            const hasDisagree = ans.includes('disagree') || ans.includes('không đồng ý');
+            const hasEcosystem = ans.includes('ecosystem') || ans.includes('hệ sinh thái');
+            if (hasDisagree || hasEcosystem) {
+                q5Score += 1.0;
+            }
+            
+            // Explains community + environment nature
+            const hasCommunity = ans.includes('community') || ans.includes('quần xã');
+            const hasEnvironment = ans.includes('environment') || ans.includes('môi trường');
+            if (hasCommunity && hasEnvironment) {
+                q5Score += 1.0;
+            }
+
+            if (q5Score === 2.0) {
+                q5AllCorrect = true;
+            }
+
+            totalScore += q5Score;
+            updateContainerStatus('q5-container', q5AllCorrect);
+            if(q5AllCorrect) completelyCorrectQs++;
+
+            const ta = document.getElementById('q5-answer');
+            if(q5Score === 2.0) {
+                ta.classList.add('bg-green-50', 'border-green-500');
+            } else if(q5Score === 1.0) {
+                ta.classList.add('bg-yellow-50', 'border-yellow-500'); 
+            } else {
+                ta.classList.add('bg-red-50', 'border-red-500');
+            }
+            
+            const q5Note = document.createElement('p');
+            q5Note.className = 'text-xs text-gray-500 mt-3 italic font-medium';
+            q5Note.textContent = `* Automated logic score: ${q5Score}/2.0 (Detected keywords: Disagree/Ecosystem=${(hasDisagree||hasEcosystem)?"Yes":"No"}, Community=${hasCommunity?"Yes":"No"}, Environment=${hasEnvironment?"Yes":"No"}). Subject to teacher review.`;
+            ta.parentNode.appendChild(q5Note);
+
+
+            // --- Final Score Presentation ---
+            totalScore = Math.round(totalScore * 10) / 10;
+            
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.classList.remove('hidden');
+            
+            document.getElementById('res-name').textContent = nameInput.value;
+            document.getElementById('res-class').textContent = classInput.value;
+            document.getElementById('res-score').textContent = totalScore;
+            document.getElementById('res-correct-qs').textContent = completelyCorrectQs;
+            
+            const feedbackEl = document.getElementById('res-feedback');
+            const percentage = (totalScore / 10) * 100;
+            
+            if (percentage >= 90) {
+                feedbackEl.textContent = "Excellent!";
+                feedbackEl.className = "font-black text-green-600 text-3xl mt-1";
+            } else if (percentage >= 70) {
+                feedbackEl.textContent = "Good!";
+                feedbackEl.className = "font-black text-blue-600 text-3xl mt-1";
+            } else if (percentage >= 50) {
+                feedbackEl.textContent = "Needs more practice!";
+                feedbackEl.className = "font-black text-yellow-600 text-2xl mt-1";
+            } else {
+                feedbackEl.textContent = "Review the lesson!";
+                feedbackEl.className = "font-black text-red-600 text-2xl mt-1";
+            }
+
+            // Scroll to results automatically after explicit click
+            setTimeout(() => {
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 300);
+        }
+
+        // Apply strict border color (Green for 100% correct, Red for ANYTHING else including missing)
+        function updateContainerStatus(containerId, is100PercentCorrect) {
+            const el = document.getElementById(containerId);
+            el.classList.remove('border-gray-100');
+            if (is100PercentCorrect) {
+                el.classList.add('status-correct');
+            } else {
+                el.classList.add('status-incorrect');
+            }
+        }
+
+    </script>
+</body>
+</html>
