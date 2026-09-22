@@ -1013,10 +1013,18 @@
                 !q4AllCorrect && { number: 4, prompt: 'True / False', details: q4Score + '/2' },
                 !q5AllCorrect && { number: 5, prompt: 'Situational question', details: q5Score + '/2' }
             ].filter(Boolean);
-            window.parent.postMessage({
-                type: 'biobilingual-worksheet-result',
-                result: { score: totalScore, maxScore: 10, correctCount: completelyCorrectQs, totalQuestions: 5, wrongQuestions }
-            }, '*');
+            const result = { score: totalScore, maxScore: 10, correctCount: completelyCorrectQs, totalQuestions: 5, wrongQuestions };
+            window.parent.postMessage({ type: 'biobilingual-worksheet-result', result }, '*');
+            if (window.parent === window) {
+                const params = new URLSearchParams(window.location.search);
+                const worksheetId = params.get('bioeduWorksheetId') || '1790086128219';
+                const student = (() => { try { const p = JSON.parse(localStorage.getItem('bioedu_student_profile') || 'null'); return p ? { ...p, id: localStorage.getItem('bioedu_student_id') || p.id || '' } : null; } catch { return null; } })();
+                const auth = (() => { try { const x = JSON.parse(localStorage.getItem('bioedu_google_auth') || 'null'); return x?.token && Date.parse(x.expiresAt) > Date.now() ? x.token : ''; } catch { return ''; } })();
+                if (student && auth) {
+                    const payload = { id: 'worksheet-result-' + worksheetId + '-direct-' + Date.now(), kind:'worksheet', sourceId:worksheetId, sourceTitle:params.get('bioeduWorksheetTitle') || 'Levels of Organization of the Living World', studentId:student.id || '', studentName:student.name || 'Học sinh', email:student.email || '', grade:String(student.block || student.grade || params.get('bioeduWorksheetGrade') || '10'), className:student.className || '', score:result.score, maxScore:result.maxScore, correctCount:result.correctCount, totalQuestions:result.totalQuestions, wrongQuestions:result.wrongQuestions, completedAt:new Date().toISOString(), sourceType:'worksheet' };
+                    fetch('https://rglsppkyxubpmbebdobe.supabase.co/functions/v1/biobilingual-api/api/result', { method:'POST', headers:{'content-type':'application/json','Authorization':'Bearer '+auth}, body:JSON.stringify(payload) }).catch(()=>{});
+                }
+            }
 
             // Scroll to results automatically after explicit click
             setTimeout(() => {
