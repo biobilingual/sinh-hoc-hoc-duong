@@ -5,7 +5,8 @@ const wwwStudentOrigin = "https://www.biobilingual.com";
 const legacyStudentOrigin = "https://biola-sinh-hoc-thpt.helenlopezj669.chatgpt.site";
 const adminOrigin = "https://biobilingual-admin-portal.helenlopezj669.chatgpt.site";
 const githubOrigin = "https://trankienquoc90-debug.github.io";
-const allowedOrigins = new Set([studentOrigin, wwwStudentOrigin, legacyStudentOrigin, adminOrigin, githubOrigin, "http://localhost:3000", "http://127.0.0.1:5500"]);
+const newGithubOrigin = "https://biobilingual.github.io";
+const allowedOrigins = new Set([studentOrigin, wwwStudentOrigin, legacyStudentOrigin, adminOrigin, githubOrigin, newGithubOrigin, "http://localhost:3000", "http://127.0.0.1:5500"]);
 const googleClientId = "519568222612-mvds8a054h1hn49ej5guk1hk9piv0arb.apps.googleusercontent.com";
 const sessionLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const adminSessionLifetimeMs = 12 * 60 * 60 * 1000;
@@ -52,9 +53,9 @@ function clean(value: unknown, max = 300) {
 }
 function isAdminOrigin(req: Request) {
   const origin = req.headers.get("Origin");
-  return origin === studentOrigin || origin === wwwStudentOrigin || origin === adminOrigin || origin === githubOrigin;
+  return origin === studentOrigin || origin === wwwStudentOrigin || origin === adminOrigin || origin === githubOrigin || origin === newGithubOrigin;
 }
-function isStudentOrigin(req: Request) { const o=req.headers.get("Origin"); return o === studentOrigin || o === wwwStudentOrigin || o === legacyStudentOrigin || o === githubOrigin; }
+function isStudentOrigin(req: Request) { const o=req.headers.get("Origin"); return o === studentOrigin || o === wwwStudentOrigin || o === legacyStudentOrigin || o === githubOrigin || o === newGithubOrigin; }
 function validGrade(value: unknown) {
   const n = Number(value);
   return [10,11,12].includes(n) ? n : 0;
@@ -152,14 +153,29 @@ async function adminLogout(req: Request) {
 
 async function stateRoute(req: Request, url: URL) {
   const key = clean(url.searchParams.get("key"), 80);
-  if (!allowedStateKeys.has(key)) return json(req,{error:"Invalid key"},400);
   const sb = adminClient();
   if (req.method === "GET") {
+    if (url.searchParams.get("keys") === "all") {
+      const { data, error } = await sb.from("app_state")
+        .select("key,value,updated_at")
+        .in("key", [...allowedStateKeys]);
+      if (error) return json(req,{error:error.message},500);
+      const values: Record<string,unknown> = {};
+      let version = "0";
+      for (const row of data || []) {
+        values[row.key] = row.value ?? null;
+        const updatedAt = row.updated_at ? String(row.updated_at) : "";
+        if (updatedAt > version) version = updatedAt;
+      }
+      return json(req,{values,version});
+    }
+    if (!allowedStateKeys.has(key)) return json(req,{error:"Invalid key"},400);
     const { data, error } = await sb.from("app_state").select("value,updated_at").eq("key",key).maybeSingle();
     if (error) return json(req,{error:error.message},500);
     return json(req,{key,value:data?.value ?? null,updatedAt:data?.updated_at ?? null});
   }
   if (req.method === "PUT") {
+    if (!allowedStateKeys.has(key)) return json(req,{error:"Invalid key"},400);
     if (!await authenticateAdmin(req)) return json(req,{error:"Unauthorized"},401);
     const body = await readBody(req);
     const serialized = JSON.stringify(body.value ?? null);
@@ -170,6 +186,17 @@ async function stateRoute(req: Request, url: URL) {
     return json(req,{ok:true,key,updatedAt});
   }
   return json(req,{error:"Method not allowed"},405);
+}
+
+async function stateVersion(req: Request) {
+  const { data, error } = await adminClient().from("app_state")
+    .select("updated_at")
+    .in("key", [...allowedStateKeys])
+    .order("updated_at", { ascending:false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return json(req,{error:error.message},500);
+  return json(req,{version:data?.updated_at ? String(data.updated_at) : "0"});
 }
 
 async function googleLogin(req: Request) {
@@ -300,7 +327,7 @@ async function upload(req: Request, url: URL) {
   const safe=file.name.replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-120);
   const path=new Date().toISOString().slice(0,10)+"/"+crypto.randomUUID()+"-"+safe;
   const sb=adminClient();
-  const { error }=await sb.storage.from(bucket).upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false,cacheControl:"3600"});
+  const { error }=await sb.storage.from(bucket).upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false,cacheControl:"31536000"});
   if(error) return json(req,{error:error.message},500);
   const { data }=sb.storage.from(bucket).getPublicUrl(path);
   return json(req,{ok:true,bucket,path,url:data.publicUrl,name:file.name,size:file.size,type:file.type});
@@ -312,6 +339,7 @@ Deno.serve(async (req: Request) => {
     const url=new URL(req.url);
     const route=url.pathname.replace(/^\/biobilingual-api/,"");
     if(route==="/api/state") return stateRoute(req,url);
+    if(route==="/api/state/version"&&req.method==="GET") return stateVersion(req);
     if(route==="/api/auth/admin/google"&&req.method==="POST") return googleAdminLogin(req);
     if(route==="/api/auth/admin/session"&&req.method==="GET") return adminSessionInfo(req);
     if(route==="/api/auth/admin/logout"&&req.method==="POST") return adminLogout(req);
