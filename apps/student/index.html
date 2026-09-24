@@ -14,15 +14,20 @@
 (function(){
   const api='https://rglsppkyxubpmbebdobe.supabase.co/functions/v1/biobilingual-api/api/state';
   const keys=['bioedu_site_content','bioedu_media_library','bioedu_mindmap','bioedu_theory_files','bioedu_entertainment','bioedu_vocab_bank','bioedu_materials_library','bioedu_exam_bank','bioedu_exams','bioedu_course_structure','bioedu_vocab_audio'];
+  const versionKey='bioedu_state_version_v1';
   const nativeSet=Storage.prototype.setItem;
   const nativeGet=Storage.prototype.getItem;
   const emit=(key,value)=>{ try{ window.dispatchEvent(new StorageEvent('storage',{key,newValue:value,storageArea:localStorage,url:location.href})); } catch(e){ window.dispatchEvent(new Event('bioedu-shared-update')); } };
   const read=async key=>{ const r=await fetch(api+'?key='+encodeURIComponent(key),{cache:'no-store'}); if(!r.ok) throw new Error('shared state read failed'); return (await r.json()).value; };
   const write=async (key,raw)=>{ let value=raw; try{ value=JSON.parse(raw); }catch(e){} const r=await fetch(api+'?key='+encodeURIComponent(key),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({key,value})}); if(!r.ok) throw new Error('shared state write failed'); return r.json(); };
-  const hydrate=async()=>{ await Promise.all(keys.map(async key=>{ try{ const value=await read(key); if(value!==null&&value!==undefined){ const raw=JSON.stringify(value); nativeSet.call(localStorage,key,raw); emit(key,raw); } }catch(e){} })); };
+  let syncing=null;
+  const applyState=payload=>{const values=payload?.values||{};keys.forEach(key=>{if(!Object.prototype.hasOwnProperty.call(values,key)||values[key]===null||values[key]===undefined)return;const raw=JSON.stringify(values[key]);if(nativeGet.call(localStorage,key)!==raw){nativeSet.call(localStorage,key,raw);emit(key,raw)}});if(payload?.version)nativeSet.call(localStorage,versionKey,String(payload.version))};
+  const hydrate=async(force=false)=>{if(syncing)return syncing;if(document.hidden&&!force)return;syncing=(async()=>{try{const known=nativeGet.call(localStorage,versionKey)||'';if(!force&&known){const check=await fetch(api+'/version',{cache:'no-store'});if(check.ok){const current=String((await check.json()).version||'0');if(current===known)return;}}const response=await fetch(api+'?keys=all',{cache:'no-store'});if(!response.ok)throw new Error('shared state batch read failed');applyState(await response.json())}catch(e){if(force){await Promise.all(keys.map(async key=>{try{const value=await read(key);if(value!==null&&value!==undefined){const raw=JSON.stringify(value);nativeSet.call(localStorage,key,raw);emit(key,raw)}}catch(_){}}))}}finally{syncing=null}})();return syncing};
   Storage.prototype.setItem=function(key,value){ nativeSet.call(this,key,value); };
-  window.BioShared={api,read,write,refresh:hydrate};
-  hydrate(); setInterval(hydrate,10000);
+  window.BioShared={api,read,write,refresh:()=>hydrate(true)};
+  hydrate(!nativeGet.call(localStorage,versionKey));
+  setInterval(()=>hydrate(false),30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)hydrate(false)});
 })();
 </script>
 <style>
