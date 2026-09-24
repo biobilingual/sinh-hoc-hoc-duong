@@ -15,15 +15,19 @@
 (function(){
   const api='https://rglsppkyxubpmbebdobe.supabase.co/functions/v1/biobilingual-api/api/state';
   const keys=['bioedu_site_content','bioedu_media_library','bioedu_mindmap','bioedu_theory_files','bioedu_entertainment','bioedu_vocab_bank','bioedu_materials_library','bioedu_exam_bank','bioedu_exams','bioedu_students','bioedu_course_structure','bioedu_results','bioedu_vocab_audio'];
+  const stateKeys=keys.filter(key=>key!=='bioedu_students'&&key!=='bioedu_results');
   const nativeSet=Storage.prototype.setItem;
   const authHeaders=()=>{const token=window.BioAdminAuth?.token?.()||'';return token?{'Authorization':`Bearer ${token}`}:{}};
   const emit=(key,value)=>{ try{ window.dispatchEvent(new StorageEvent('storage',{key,newValue:value,storageArea:localStorage,url:location.href})); } catch(e){ window.dispatchEvent(new Event('bioedu-shared-update')); } };
   const read=async key=>{ const endpoint=key==='bioedu_students'?api.replace('/api/state','/api/students'):key==='bioedu_results'?api.replace('/api/state','/api/results'):api+'?key='+encodeURIComponent(key); const r=await fetch(endpoint,{cache:'no-store',headers:authHeaders()}); if(!r.ok) throw new Error('shared state read failed'); return (await r.json()).value; };
   const write=async (key,raw)=>{ let value=raw; try{ value=JSON.parse(raw); }catch(e){} const r=await fetch(api+'?key='+encodeURIComponent(key),{method:'PUT',headers:{'content-type':'application/json',...authHeaders()},body:JSON.stringify({key,value})}); if(!r.ok) throw new Error('shared state write failed'); return r.json(); };
-  const hydrate=async()=>{ await Promise.all(keys.map(async key=>{ try{ const value=await read(key); if(value!==null&&value!==undefined){ const raw=JSON.stringify(value); nativeSet.call(localStorage,key,raw); emit(key,raw); } }catch(e){} })); };
+  let syncing=null;
+  const applyValue=(key,value)=>{if(value===null||value===undefined)return;const raw=JSON.stringify(value);if(localStorage.getItem(key)!==raw){nativeSet.call(localStorage,key,raw);emit(key,raw)}};
+  const hydrate=async()=>{if(syncing)return syncing;syncing=(async()=>{try{const [stateResponse,students,results]=await Promise.all([fetch(api+'?keys=all',{cache:'no-store'}),read('bioedu_students'),read('bioedu_results')]);if(stateResponse.ok){const payload=await stateResponse.json();const values=payload.values||{};stateKeys.forEach(key=>{if(Object.prototype.hasOwnProperty.call(values,key))applyValue(key,values[key])})}applyValue('bioedu_students',students);applyValue('bioedu_results',results)}catch(e){}finally{syncing=null}})();return syncing};
   Storage.prototype.setItem=function(key,value){ nativeSet.call(this,key,value); if(this===localStorage&&keys.includes(key)&&key!=='bioedu_students'&&key!=='bioedu_results'){ write(key,value).catch(()=>{}); } };
   window.BioShared={api,base:api.replace('/api/state',''),read,write,refresh:hydrate,authHeaders};
-  window.addEventListener('bio-admin-auth-ready',hydrate); setInterval(()=>{if(window.BioAdminAuth?.token?.())hydrate()},10000);
+  window.addEventListener('bio-admin-auth-ready',hydrate); setInterval(()=>{if(window.BioAdminAuth?.token?.()&&!document.hidden)hydrate()},30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&window.BioAdminAuth?.token?.())hydrate()});
 })();
 </script>
 <style>
