@@ -53,7 +53,7 @@
     overlay.innerHTML = `
       <section style="width:min(920px,100%);max-height:min(84vh,760px);display:flex;flex-direction:column;background:#fff;border:1px solid #dbeafe;border-radius:22px;box-shadow:0 28px 80px rgba(15,23,42,.26);overflow:hidden">
         <header style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #e2e8f0;background:linear-gradient(135deg,#eff6ff,#f8fafc)">
-          <div><div style="font-size:20px;font-weight:800;color:#0f172a">Lịch sử làm bài</div><div style="font-size:13px;font-weight:600;color:#64748b;margin-top:3px">Test History · Kết quả đã được lưu theo tài khoản của bạn</div></div>
+          <div><div style="font-size:20px;font-weight:800;color:#0f172a">Lịch sử làm bài</div><div style="font-size:13px;font-weight:600;color:#64748b;margin-top:3px">Attempt History · Kết quả đã được lưu theo tài khoản của bạn</div></div>
           <button id="bioedu-history-close" style="width:38px;height:38px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#475569;font-size:20px;cursor:pointer">×</button>
         </header>
         <div id="bioedu-history-body" style="padding:18px 20px;overflow:auto;background:#f8fafc;min-height:180px"></div>
@@ -104,20 +104,34 @@
 
   function patchHeader() {
     const buttons = Array.from(document.querySelectorAll('button'));
-    const help = buttons.find(button => /Trợ giúp\s*\/\s*Help/i.test(button.textContent || ''));
-    if (help && !help.dataset.historyReady) {
-      help.dataset.historyReady = '1';
-      help.textContent = 'Lịch sử làm bài / Test History';
+    const help = buttons.find(button => /Trợ giúp\s*\/\s*Help/i.test(button.textContent || ''))
+      || buttons.find(button => button.dataset.bioeduHistoryButton === '1');
+    if (help) {
+      help.dataset.bioeduHistoryButton = '1';
+      if (help.textContent !== 'Lịch sử làm bài / Attempt History') {
+        help.textContent = 'Lịch sử làm bài / Attempt History';
+      }
+      help.setAttribute('aria-label', 'Lịch sử làm bài');
       help.onclick = loadHistory;
       const icon = help.parentElement?.querySelector('span');
       if (icon) {
-        icon.textContent = '↺';
+        if (icon.textContent !== '↺') icon.textContent = '↺';
         icon.style.cursor = 'pointer';
         icon.title = 'Lịch sử làm bài';
+        icon.setAttribute('role', 'button');
+        icon.setAttribute('tabindex', '0');
         icon.onclick = loadHistory;
+        icon.onkeydown = event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            loadHistory();
+          }
+        };
       }
     }
-    buttons.filter(button => /Hỏi Biola\s*\/\s*Ask Biola/i.test(button.textContent || '')).forEach(button => button.remove());
+    buttons
+      .filter(button => /Hỏi Biola\s*\/\s*Ask Biola/i.test(button.textContent || ''))
+      .forEach(button => button.remove());
   }
 
   const observer = new MutationObserver(patchHeader);
