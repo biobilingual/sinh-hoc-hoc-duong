@@ -19,7 +19,7 @@
     const response=await fetch(stable,{cache:'no-store'});
     if(!response.ok)throw new Error('Không tải được giao diện học sinh.');
     let html=await response.text();
-    const historyScript='<script src="https://biobilingual.github.io/sinh-hoc-hoc-duong/apps/student/history.js"><\/script>';
+    const historyScript='<script src="https://biobilingual.github.io/sinh-hoc-hoc-duong/apps/student/history.js?v=20261002-1108"><\/script>';
     if(html.includes('</body>')) html=html.replace('</body>',historyScript+'</body>');
     else html+=historyScript;
     document.open();
