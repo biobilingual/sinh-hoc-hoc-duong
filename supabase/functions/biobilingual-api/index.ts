@@ -262,6 +262,25 @@ async function saveResult(req: Request) {
   if (error) return json(req,{error:error.message},500);
   return json(req,{ok:true,id});
 }
+async function myResults(req: Request) {
+  if (!isStudentOrigin(req)) return json(req,{error:"Forbidden"},403);
+  const auth = await authenticateStudent(req);
+  if (!auth) return json(req,{error:"Unauthorized"},401);
+  const { data,error } = await adminClient().from("learning_results")
+    .select("*")
+    .eq("student_id",auth.email)
+    .order("completed_at",{ascending:false})
+    .limit(500);
+  if (error) return json(req,{error:error.message},500);
+  return json(req,{value:(data||[]).map(r=>({
+    id:r.id,studentId:r.student_id,studentName:r.student_name,name:r.student_name,
+    grade:String(r.grade),className:r.class_name,sourceId:r.source_id,examId:r.source_id,
+    sourceTitle:r.source_title,title:r.source_title,sourceType:r.source_type,
+    score:Number(r.score),maxScore:Number(r.max_score),
+    wrongQuestions:r.wrong_questions||[],completedAt:r.completed_at
+  }))});
+}
+
 async function adminStudents(req: Request) {
   if (!await authenticateAdmin(req)) return json(req,{error:"Unauthorized"},401);
   const { data,error } = await adminClient().from("student_accounts").select("*").order("grade").order("class_name").order("name");
@@ -347,6 +366,7 @@ Deno.serve(async (req: Request) => {
     if(route==="/api/auth/session"&&req.method==="GET") return sessionInfo(req);
     if(route==="/api/student"&&req.method==="POST") return saveStudent(req);
     if(route==="/api/result"&&req.method==="POST") return saveResult(req);
+    if(route==="/api/my-results"&&req.method==="GET") return myResults(req);
     if(route==="/api/students"&&req.method==="GET") return adminStudents(req);
     if(route==="/api/results"&&req.method==="GET") return adminResults(req,url);
     if(route==="/api/leaderboard"&&req.method==="GET") return leaderboard(req,url);
