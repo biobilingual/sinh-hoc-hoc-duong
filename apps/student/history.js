@@ -102,7 +102,42 @@
     if (seq === openSeq) renderRows(localResults());
   }
 
+  const normalizedText = value => String(value || '').replace(/\\s+/g, ' ').trim();
+
+  function isVocabularyConfigPage() {
+    return /Tùy chỉnh\\s*\\/\\s*Settings/i.test(document.body?.textContent || '');
+  }
+
+  function goToHome() {
+    const homeButton = Array.from(document.querySelectorAll('button')).find(button =>
+      /Trang chủ/i.test(normalizedText(button.textContent))
+    );
+    if (homeButton) {
+      homeButton.click();
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      return;
+    }
+    window.location.assign(window.location.origin + window.location.pathname);
+  }
+
+  function patchVocabularyBack() {
+    if (!isVocabularyConfigPage()) return;
+    const backButton = Array.from(document.querySelectorAll('button, a')).find(element =>
+      /^←?\\s*Quay lại\\s*\\/\\s*Back$/i.test(normalizedText(element.textContent))
+    );
+    if (!backButton || backButton.dataset.bioeduVocabHomeBack === '1') return;
+    backButton.dataset.bioeduVocabHomeBack = '1';
+    backButton.setAttribute('aria-label', 'Quay về Trang chủ');
+    backButton.onclick = event => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      goToHome();
+    };
+  }
+
   function patchHeader() {
+    patchVocabularyBack();
     const buttons = Array.from(document.querySelectorAll('button'));
     const help = buttons.find(button => /Trợ giúp\s*\/\s*Help/i.test(button.textContent || ''))
       || buttons.find(button => button.dataset.bioeduHistoryButton === '1');
