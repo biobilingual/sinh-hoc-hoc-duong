@@ -102,10 +102,10 @@
     if (seq === openSeq) renderRows(localResults());
   }
 
-  const normalizedText = value => String(value || '').replace(/\\s+/g, ' ').trim();
+  const normalizedText = value => String(value || '').replace(/\s+/g, ' ').trim();
 
   function isVocabularyConfigPage() {
-    return /Tùy chỉnh\\s*\\/\\s*Settings/i.test(document.body?.textContent || '');
+    return /Tùy chỉnh\s*\/\s*Settings/i.test(document.body?.textContent || '');
   }
 
   function goToHome() {
@@ -123,7 +123,7 @@
   function patchVocabularyBack() {
     if (!isVocabularyConfigPage()) return;
     const backButton = Array.from(document.querySelectorAll('button, a')).find(element =>
-      /^←?\\s*Quay lại\\s*\\/\\s*Back$/i.test(normalizedText(element.textContent))
+      /^←?\s*Quay lại\s*\/\s*Back$/i.test(normalizedText(element.textContent))
     );
     if (!backButton || backButton.dataset.bioeduVocabHomeBack === '1') return;
     backButton.dataset.bioeduVocabHomeBack = '1';
